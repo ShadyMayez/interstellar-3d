@@ -46,13 +46,8 @@ function createCardCanvasTexture(data) {
   ctx.font = '700 26px "Space Grotesk", "Outfit", monospace, sans-serif';
   ctx.fillText(data.indexTag, 56, 76);
 
-  // Title with glow shadow for dark cards
-  if (data.textColor === '#ffffff') {
-    ctx.shadowColor = data.accentColor;
-    ctx.shadowBlur = 16;
-  } else {
-    ctx.shadowBlur = 0;
-  }
+  // Title (Pure clean flat typography - ZERO font glow or shine!)
+  ctx.shadowBlur = 0;
   ctx.fillStyle = data.textColor;
   ctx.font = '900 68px "Syne", "Space Grotesk", "Outfit", system-ui, sans-serif';
   ctx.fillText(data.title, 56, 172);
@@ -237,17 +232,17 @@ export function createGlassCards() {
     const cardGroup = new THREE.Group();
     cardGroup.name = `Card_${data.section}`;
 
-    // Physical Glass Material for 3D Thin Block (Matching individual card palette color!)
+    // Physical Glass Material for 3D Thin Block (Semi-transparent glass: transmission = 0.88, opacity = 0.65)
     const glassMat = new THREE.MeshPhysicalMaterial({
       color: new THREE.Color(data.glassColor),
       metalness: 0.05,
-      roughness: 0.10,
-      transmission: 0.70,
+      roughness: 0.12,
+      transmission: 0.88,
       ior: 1.45,
-      clearcoat: 0.8,
+      clearcoat: 0.4,
       clearcoatRoughness: 0.1,
       transparent: true,
-      opacity: 0.92,
+      opacity: 0.65,
       side: THREE.DoubleSide,
       depthWrite: false
     });
@@ -260,7 +255,7 @@ export function createGlassCards() {
     const textMat = new THREE.MeshBasicMaterial({
       map: textTexture,
       transparent: true,
-      opacity: 0.98,
+      opacity: 0.82,
       side: THREE.DoubleSide,
       depthWrite: false
     });
