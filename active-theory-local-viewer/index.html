@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Active Theory · Reconstruction — Interstellar</title>
+  <meta name="description" content="Active Theory Reconstruction — Interstellar 3D Experience" />
+  <link rel="stylesheet" href="/src/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="three-canvas"></canvas>
+
+    <!-- Top UI Header -->
+    <header class="ui-header">
+      <div class="ui-title">
+        <span class="active-theory-logo">ACTIVE THEORY</span>
+        <span class="sub-title">RECONSTRUCTION</span>
+      </div>
+      <div class="ui-nav">
+        <a href="#work" class="nav-item">WORK</a>
+        <span class="separator">—</span>
+        <a href="#contact" class="nav-item">CONTACT</a>
+      </div>
+    </header>
+
+    <!-- Left section sidebar menu -->
+    <aside class="ui-sidebar">
+      <div class="section-label">WHAT ARE YOU LOOKING FOR?</div>
+      <ul class="section-menu">
+        <li class="menu-item active" data-section="0"><span class="arrow">-></span> WEBSITES</li>
+        <li class="menu-item" data-section="1">INSTALLATIONS</li>
+        <li class="menu-item" data-section="2">XR / VR / AI</li>
+        <li class="menu-item" data-section="3">MULTIPLAYER</li>
+        <li class="menu-item" data-section="4">GAMES</li>
+      </ul>
+      <div class="ask-me-box">
+        <span>ASK ME ANYTHING...</span>
+      </div>
+    </aside>
+
+    <!-- Right scroll progress thumb -->
+    <div class="ui-scrollbar">
+      <div class="stream-label">&lt;&lt; ANS OF STREAM &gt;&gt;</div>
+      <div class="scroll-track">
+        <div id="scroll-thumb" class="scroll-thumb"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

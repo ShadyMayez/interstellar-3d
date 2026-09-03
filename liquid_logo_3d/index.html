@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Liquid Logo — 3D Flowing Material</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#000;height:100%;width:100%;}
+  #info{
+    position:fixed;top:14px;left:14px;color:#e9d8ff;font-family:Arial,Helvetica,sans-serif;
+    font-size:12px;background:rgba(10,5,25,0.55);padding:10px 14px;border-radius:10px;
+    border:1px solid rgba(200,150,255,0.25);letter-spacing:.3px;line-height:1.5;
+    backdrop-filter: blur(6px);
+  }
+  canvas{display:block;}
+</style>
+</head>
+<body>
+<div id="info">Drag to rotate &middot; Scroll to zoom<br>Liquid flow logo — 3D model</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ============================================================
+// SCENE SETUP
+// ============================================================
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x030308);
+
+const camera = new THREE.PerspectiveCamera(38, window.innerWidth/window.innerHeight, 0.1, 100);
+camera.position.set(0, 0.3, 9.5);
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Soft studio lighting rig (used for a subtle rim/base pass; main shading is procedural)
+scene.add(new THREE.AmbientLight(0x201030, 0.6));
+const key = new THREE.DirectionalLight(0xff9ee9, 1.1);
+key.position.set(4,5,6);
+scene.add(key);
+const fill = new THREE.DirectionalLight(0x4060ff, 0.6);
+fill.position.set(-5,-2,4);
+scene.add(fill);
+const rim = new THREE.PointLight(0xd946ef, 1.4, 20);
+rim.position.set(-3,3,-4);
+scene.add(rim);
+
+// ============================================================
+// BUILD THE LOGO SILHOUETTE (2D outline traced from the artwork)
+// Left rounded lobe + right winged lobe + tapering tail + the
+// triangular negative-space notch between them.
+// ============================================================
+function pt(x,y){ return new THREE.Vector2(x/60 - 4.0, -(y/60 - 3.4)); }
+
+const shape = new THREE.Shape();
+
+// Outer silhouette, traced clockwise starting at top of the left lobe
+shape.moveTo(pt(90,15).x, pt(90,15).y);
+shape.bezierCurveTo(pt(150,0).x,pt(150,0).y, pt(215,10).x,pt(215,10).y, pt(240,55).x,pt(240,55).y);
+shape.bezierCurveTo(pt(252,80).x,pt(252,80).y, pt(258,95).x,pt(258,95).y, pt(268,80).x,pt(268,80).y);
+shape.bezierCurveTo(pt(290,45).x,pt(290,45).y, pt(340,25).x,pt(340,25).y, pt(390,45).x,pt(390,45).y);
+shape.bezierCurveTo(pt(440,65).x,pt(440,65).y, pt(462,110).x,pt(462,110).y, pt(452,155).x,pt(452,155).y);
+shape.bezierCurveTo(pt(444,195).x,pt(444,195).y, pt(410,225).x,pt(410,225).y, pt(368,222).x,pt(368,222).y);
+shape.bezierCurveTo(pt(345,220).x,pt(345,220).y, pt(325,235).x,pt(325,235).y, pt(312,255).x,pt(312,255).y);
+shape.bezierCurveTo(pt(295,285).x,pt(295,285).y, pt(278,320).x,pt(278,320).y, pt(263,365).x,pt(263,365).y);
+shape.bezierCurveTo(pt(258,382).x,pt(258,382).y, pt(250,388).x,pt(250,388).y, pt(244,370).x,pt(244,370).y);
+shape.bezierCurveTo(pt(230,325).x,pt(230,325).y, pt(215,290).x,pt(215,290).y, pt(198,258).x,pt(198,258).y);
+shape.bezierCurveTo(pt(188,238).x,pt(188,238).y, pt(178,232).x,pt(178,232).y, pt(160,235).x,pt(160,235).y);
+shape.bezierCurveTo(pt(95,248).x,pt(95,248).y, pt(30,225).x,pt(30,225).y, pt(12,175).x,pt(12,175).y);
+shape.bezierCurveTo(pt(-2,135).x,pt(-2,135).y, pt(5,80).x,pt(5,80).y, pt(30,50).x,pt(30,50).y);
+shape.bezierCurveTo(pt(48,28).x,pt(48,28).y, pt(70,15).x,pt(70,15).y, pt(90,15).x,pt(90,15).y);
+
+// Inner hole — the pale triangular gap visible between the lobes and tail
+const hole = new THREE.Path();
+hole.moveTo(pt(258,222).x, pt(258,222).y);
+hole.bezierCurveTo(pt(285,220).x,pt(285,220).y, pt(305,232).x,pt(305,232).y, pt(295,255).x,pt(295,255).y);
+hole.bezierCurveTo(pt(280,285).x,pt(280,285).y, pt(268,300).x,pt(268,300).y, pt(255,290).x,pt(255,290).y);
+hole.bezierCurveTo(pt(238,270).x,pt(238,270).y, pt(222,245).x,pt(222,245).y, pt(228,228).x,pt(228,228).y);
+hole.bezierCurveTo(pt(238,215).x,pt(238,215).y, pt(248,220).x,pt(248,220).y, pt(258,222).x,pt(258,222).y);
+shape.holes.push(hole);
+
+const extrudeSettings = {
+  depth: 0.62,
+  bevelEnabled: true,
+  bevelThickness: 0.10,
+  bevelSize: 0.09,
+  bevelSegments: 10,
+  curveSegments: 48
+};
+
+const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+geometry.center();
+geometry.computeVertexNormals();
+
+// Bounding info passed to shader so flow can be positioned in local space
+geometry.computeBoundingBox();
+const bb = geometry.boundingBox;
+const bbSize = new THREE.Vector3(); bb.getSize(bbSize);
+const bbMin = bb.min.clone();
+
+// ============================================================
+// LIQUID FLOW SHADER MATERIAL
+// Deep navy on the left lobe swirling into hot magenta / violet
+// on the right wing and the descending tail — mimicking the
+// reference flow-direction arrows (spiral left, diagonal upper
+// right, and a slow downward pour into the tail).
+// ============================================================
+const uniforms = {
+  uTime: { value: 0 },
+  uBoxMin: { value: bbMin },
+  uBoxSize: { value: bbSize },
+  uLightPos: { value: key.position.clone() },
+};
+
+const vertexShader = `
+  varying vec3 vNormal;
+  varying vec3 vWorldPos;
+  varying vec3 vObjPos;
+  void main(){
+    vNormal = normalize(normalMatrix * normal);
+    vec4 wp = modelMatrix * vec4(position,1.0);
+    vWorldPos = wp.xyz;
+    vObjPos = position;
+    gl_Position = projectionMatrix * viewMatrix * wp;
+  }
+`;
+
+const fragmentShader = `
+  uniform float uTime;
+  uniform vec3 uBoxMin;
+  uniform vec3 uBoxSize;
+  uniform vec3 uLightPos;
+  varying vec3 vNormal;
+  varying vec3 vWorldPos;
+  varying vec3 vObjPos;
+
+  // ---- classic simplex-ish noise (2D) ----
+  vec2 hash(vec2 p){
+    p = vec2(dot(p,vec2(127.1,311.7)), dot(p,vec2(269.5,183.3)));
+    return -1.0 + 2.0*fract(sin(p)*43758.5453123);
+  }
+  float noise(vec2 p){
+    const float K1 = 0.366025404;
+    const float K2 = 0.211324865;
+    vec2 i = floor(p + (p.x+p.y)*K1);
+    vec2 a = p - i + (i.x+i.y)*K2;
+    vec2 o = (a.x>a.y) ? vec2(1.0,0.0) : vec2(0.0,1.0);
+    vec2 b = a - o + K2;
+    vec2 c = a - 1.0 + 2.0*K2;
+    vec3 h = max(0.5-vec3(dot(a,a),dot(b,b),dot(c,c)),0.0);
+    vec3 n = h*h*h*h*vec3(dot(a,hash(i+0.0)),dot(b,hash(i+o)),dot(c,hash(i+1.0)));
+    return dot(n, vec3(70.0));
+  }
+  float fbm(vec2 p){
+    float v = 0.0;
+    float a = 0.5;
+    for(int i=0;i<5;i++){
+      v += a*noise(p);
+      p *= 2.02;
+      a *= 0.5;
+    }
+    return v;
+  }
+
+  void main(){
+    // normalized 0..1 coords across the whole logo footprint
+    vec2 uv = (vObjPos.xy - uBoxMin.xy) / uBoxSize.xy;
+
+    float t = uTime * 0.06; // slow, heavy liquid pace
+
+    // --- region weights ---
+    float leftW  = smoothstep(0.62, 0.05, uv.x);                 // left lobe dominance
+    float tailW  = smoothstep(0.62, 0.15, uv.y) * smoothstep(0.15, 0.55, uv.x); // downward tail
+    float rightW = 1.0 - leftW; 
+
+    // --- flow field 1: slow spiral swirl in the left lobe ---
+    vec2 c1 = uv - vec2(0.30, 0.72);
+    float ang = atan(c1.y, c1.x) - t*1.4 + length(c1)*3.0;
+    float rad = length(c1);
+    float spiral = sin(ang*3.0 - rad*10.0) * 0.5 + 0.5;
+
+    // --- flow field 2: diagonal current toward upper-right through the wing ---
+    vec2 dirUR = normalize(vec2(1.0, 0.55));
+    float diag = fbm(uv*3.2 + dirUR*t*2.2);
+
+    // --- flow field 3: slow downward pour feeding the tail ---
+    vec2 dirDown = vec2(0.15, -1.0);
+    float pour = fbm(uv*4.0 + dirDown*t*2.6 + vec2(4.2,1.7));
+
+    float flow = spiral*leftW*0.9 + diag*rightW*1.1 + pour*tailW*1.3;
+    flow = clamp(flow, 0.0, 1.6);
+
+    // fine surface ripple for a heavier, viscous look
+    float ripple = fbm(uv*9.0 - vec2(0.0, t*1.0)) * 0.18;
+    flow += ripple;
+
+    // ---- palette matched to the reference artwork ----
+    vec3 navyDeep   = vec3(0.010, 0.012, 0.055);
+    vec3 navyMid    = vec3(0.035, 0.035, 0.16);
+    vec3 violet     = vec3(0.27, 0.06, 0.42);
+    vec3 magenta    = vec3(0.62, 0.05, 0.72);
+    vec3 hotPink    = vec3(0.92, 0.20, 0.92);
+    vec3 brightCore = vec3(1.0, 0.55, 0.98);
+
+    vec3 leftCol  = mix(navyDeep, navyMid, spiral*0.6 + 0.2);
+    vec3 rightCol = mix(violet, magenta, diag);
+    rightCol = mix(rightCol, hotPink, smoothstep(0.55,1.0,diag));
+    vec3 tailCol  = mix(magenta, brightCore, pour);
+
+    vec3 base = mix(leftCol, rightCol, smoothstep(0.30,0.75,uv.x));
+    base = mix(base, tailCol, tailW*0.85);
+
+    // glowing seam where the two lobes merge (matches the bright core in art)
+    float seam = smoothstep(0.10,0.0, abs(uv.x-0.62)) * smoothstep(0.85,0.35,uv.y);
+    base = mix(base, brightCore, seam*0.55);
+
+    float sheen = pow(flow*0.5+0.5, 2.0) * 0.35;
+    base += sheen * vec3(0.9,0.5,1.0);
+
+    // ---- lighting ----
+    vec3 N = normalize(vNormal);
+    vec3 L = normalize(uLightPos - vWorldPos);
+    vec3 V = normalize(cameraPosition - vWorldPos);
+    vec3 H = normalize(L+V);
+    float diff = max(dot(N,L), 0.0);
+    float spec = pow(max(dot(N,H),0.0), 48.0) * 0.7;
+    float fres = pow(1.0 - max(dot(N,V),0.0), 2.5);
+
+    vec3 color = base * (0.35 + 0.85*diff);
+    color += spec * vec3(1.0,0.85,1.0);
+    color += fres * vec3(0.55,0.25,0.85) * 0.5;
+
+    gl_FragColor = vec4(color, 1.0);
+  }
+`;
+
+const material = new THREE.ShaderMaterial({
+  uniforms, vertexShader, fragmentShader,
+  side: THREE.DoubleSide
+});
+
+const mesh = new THREE.Mesh(geometry, material);
+scene.add(mesh);
+
+// subtle floor glow disc for grounding/depth
+const glowGeo = new THREE.CircleGeometry(3.2, 64);
+const glowMat = new THREE.MeshBasicMaterial({color:0x1a0630, transparent:true, opacity:0.35});
+const glow = new THREE.Mesh(glowGeo, glowMat);
+glow.position.z = -1.4;
+scene.add(glow);
+
+// ============================================================
+// INTERACTION — manual orbit (drag + wheel), plus gentle auto-spin
+// ============================================================
+let rotY = 0.35, rotX = -0.12, dragging = false, lastX=0, lastY=0;
+let autoSpin = 0.0009;
+let dist = 9.5;
+
+renderer.domElement.addEventListener('pointerdown', e=>{dragging=true; lastX=e.clientX; lastY=e.clientY;});
+window.addEventListener('pointerup', ()=>dragging=false);
+window.addEventListener('pointermove', e=>{
+  if(!dragging) return;
+  rotY += (e.clientX-lastX)*0.006;
+  rotX += (e.clientY-lastY)*0.006;
+  rotX = Math.max(-1.0, Math.min(1.0, rotX));
+  lastX=e.clientX; lastY=e.clientY;
+});
+renderer.domElement.addEventListener('wheel', e=>{
+  dist += e.deltaY*0.003;
+  dist = Math.max(5, Math.min(18, dist));
+}, {passive:true});
+
+function updateCamera(){
+  camera.position.x = Math.sin(rotY)*Math.cos(rotX)*dist;
+  camera.position.z = Math.cos(rotY)*Math.cos(rotX)*dist;
+  camera.position.y = Math.sin(rotX)*dist*0.7 + 0.3;
+  camera.lookAt(0,0,0);
+}
+
+window.addEventListener('resize', ()=>{
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+const clock = new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  uniforms.uTime.value = t;
+  if(!dragging) rotY += autoSpin;
+  updateCamera();
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>

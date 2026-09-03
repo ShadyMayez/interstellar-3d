@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Organic Liquid Glass Logo</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body {
+      background:
+        radial-gradient(circle at 50% 43%, rgba(255,255,255,1) 0 32%, rgba(246,246,249,.98) 62%, rgba(232,232,238,1) 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    canvas { display: block; width: 100%; height: 100%; }
+    #loading {
+      position: fixed; inset: 0; display: grid; place-items: center;
+      color: #25253a; font-size: 13px; letter-spacing: .18em; text-transform: uppercase;
+      background: rgba(245,245,249,.94); transition: opacity .55s ease;
+      z-index: 10;
+    }
+    #loading.done { opacity: 0; pointer-events: none; }
+    #hint {
+      position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+      padding: 8px 12px; border-radius: 999px;
+      font-size: 11px; color: rgba(29,28,46,.58);
+      background: rgba(255,255,255,.48); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,.72); user-select: none; pointer-events: none;
+    }
+  </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="loading">Forming liquid glass…</div>
+  <div id="hint">Drag to rotate · Scroll to zoom</div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+    const scene = new THREE.Scene();
+    scene.background = null;
+
+    const camera = new THREE.PerspectiveCamera(34, innerWidth / innerHeight, 0.05, 100);
+    camera.position.set(0, 0.08, 7.35);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.13;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.transmissionResolutionScale = 0.8;
+    document.body.appendChild(renderer.domElement);
+
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmrem.dispose();
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.055;
+    controls.enablePan = false;
+    controls.minDistance = 4.8;
+    controls.maxDistance = 10;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.34;
+    controls.target.set(0, -0.04, 0);
+
+    // Studio lights: cool left, hot-magenta right, bright white rim from above.
+    const key = new THREE.DirectionalLight(0xffffff, 4.2);
+    key.position.set(-1.5, 4.5, 5.5);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.camera.near = 0.1;
+    key.shadow.camera.far = 20;
+    scene.add(key);
+
+    const blueLight = new THREE.PointLight(0x176dff, 42, 9, 2.0);
+    blueLight.position.set(-3.4, 0.2, 2.4);
+    scene.add(blueLight);
+
+    const magentaLight = new THREE.PointLight(0xff00e6, 52, 9, 2.0);
+    magentaLight.position.set(3.25, -0.25, 2.8);
+    scene.add(magentaLight);
+
+    const violetBack = new THREE.PointLight(0x5b00ff, 34, 8, 2.0);
+    violetBack.position.set(0.2, 1.8, -3.5);
+    scene.add(violetBack);
+
+    // Soft floating shadow beneath the object.
+    const shadowTexture = makeShadowTexture();
+    const shadow = new THREE.Mesh(
+      new THREE.PlaneGeometry(4.7, 1.2),
+      new THREE.MeshBasicMaterial({ map: shadowTexture, transparent: true, depthWrite: false, opacity: 0.46 })
+    );
+    shadow.rotation.x = -Math.PI / 2;
+    shadow.position.set(0.08, -2.17, -0.02);
+    scene.add(shadow);
+
+    function makeShadowTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 128;
+      const ctx = c.getContext('2d');
+      const g = ctx.createRadialGradient(256, 64, 2, 256, 64, 250);
+      g.addColorStop(0, 'rgba(55, 0, 115, .42)');
+      g.addColorStop(.36, 'rgba(70, 0, 140, .18)');
+      g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, c.width, c.height);
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
+    }
+
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.62, 0.86, 0.72);
+    composer.addPass(bloom);
+
+    const clock = new THREE.Clock();
+    const animatedMaterials = [];
+    let logoRoot = null;
+
+    const loader = new GLTFLoader();
+    loader.load(
+      './liquid_logo.glb',
+      (gltf) => {
+        logoRoot = new THREE.Group();
+        scene.add(logoRoot);
+
+        gltf.scene.traverse((obj) => {
+          if (!obj.isMesh) return;
+
+          obj.geometry.computeVertexNormals();
+          obj.geometry.computeBoundingSphere();
+
+          // Main physically-based liquid-glass shell.
+          const glass = new THREE.MeshPhysicalMaterial({
+            color: 0xffffff,
+            vertexColors: true,
+            metalness: 0.04,
+            roughness: 0.045,
+            transmission: 0.42,
+            thickness: 1.25,
+            ior: 1.52,
+            attenuationColor: new THREE.Color(0x3711a8),
+            attenuationDistance: 1.6,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.025,
+            specularIntensity: 1.0,
+            specularColor: new THREE.Color(0xffffff),
+            iridescence: 0.28,
+            iridescenceIOR: 1.35,
+            iridescenceThicknessRange: [130, 560],
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.98,
+            envMapIntensity: 1.75
+          });
+
+          const outer = new THREE.Mesh(obj.geometry, glass);
+          outer.castShadow = true;
+          outer.receiveShadow = true;
+          outer.renderOrder = 2;
+          logoRoot.add(outer);
+
+          // Internal animated streak layer. It sits slightly inside the glass.
+          const flowMaterial = makeFlowMaterial();
+          const flow = new THREE.Mesh(obj.geometry, flowMaterial);
+          flow.scale.setScalar(0.972);
+          flow.renderOrder = 1;
+          logoRoot.add(flow);
+          animatedMaterials.push(flowMaterial);
+
+          // Separate Fresnel shell gives a strong thick glass rim.
+          const rimMaterial = makeRimMaterial();
+          const rim = new THREE.Mesh(obj.geometry, rimMaterial);
+          rim.scale.setScalar(1.006);
+          rim.renderOrder = 3;
+          logoRoot.add(rim);
+          animatedMaterials.push(rimMaterial);
+        });
+
+        // Slight tilt makes the inflated front surface readable immediately.
+        logoRoot.rotation.set(-0.04, -0.10, -0.015);
+        logoRoot.scale.setScalar(0.94);
+        fitCameraToObject(logoRoot);
+
+        document.getElementById('loading').classList.add('done');
+      },
+      undefined,
+      (error) => {
+        console.error(error);
+        document.getElementById('loading').textContent = 'Could not load liquid_logo.glb';
+      }
+    );
+
+    function makeFlowMaterial() {
+      return new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        depthTest: true,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide,
+        uniforms: {
+          uTime: { value: 0 },
+          uIntensity: { value: 1.0 }
+        },
+        vertexShader: /* glsl */`
+          varying vec3 vObjectPosition;
+          varying vec3 vWorldPosition;
+          varying vec3 vNormalW;
+          void main() {
+            vObjectPosition = position;
+            vec4 wp = modelMatrix * vec4(position, 1.0);
+            vWorldPosition = wp.xyz;
+            vNormalW = normalize(mat3(modelMatrix) * normal);
+            gl_Position = projectionMatrix * viewMatrix * wp;
+          }
+        `,
+        fragmentShader: /* glsl */`
+          precision highp float;
+          uniform float uTime;
+          uniform float uIntensity;
+          varying vec3 vObjectPosition;
+          varying vec3 vWorldPosition;
+          varying vec3 vNormalW;
+
+          float hash31(vec3 p) {
+            p = fract(p * 0.1031);
+            p += dot(p, p.yzx + 33.33);
+            return fract((p.x + p.y) * p.z);
+          }
+          float noise3(vec3 p) {
+            vec3 i = floor(p), f = fract(p);
+            f = f * f * (3.0 - 2.0 * f);
+            float n000 = hash31(i + vec3(0,0,0));
+            float n100 = hash31(i + vec3(1,0,0));
+            float n010 = hash31(i + vec3(0,1,0));
+            float n110 = hash31(i + vec3(1,1,0));
+            float n001 = hash31(i + vec3(0,0,1));
+            float n101 = hash31(i + vec3(1,0,1));
+            float n011 = hash31(i + vec3(0,1,1));
+            float n111 = hash31(i + vec3(1,1,1));
+            return mix(mix(mix(n000,n100,f.x),mix(n010,n110,f.x),f.y),
+                       mix(mix(n001,n101,f.x),mix(n011,n111,f.x),f.y),f.z);
+          }
+          float fbm(vec3 p) {
+            float v = 0.0;
+            float a = 0.5;
+            for (int i = 0; i < 4; i++) {
+              v += a * noise3(p);
+              p = p * 2.03 + vec3(7.1, 3.7, 5.2);
+              a *= 0.5;
+            }
+            return v;
+          }
+          float line(float x, float width) {
+            return pow(max(0.0, 1.0 - abs(sin(x))), width);
+          }
+
+          void main() {
+            vec3 p = vObjectPosition;
+            float t = uTime;
+
+            // Horizontal stream: left lobe -> narrow bridge -> right lobe.
+            float warpA = fbm(vec3(p.x * 0.85 - t * 0.48, p.y * 1.35, p.z * 2.5));
+            float pathA = p.y * 7.4 + p.x * 1.15 + p.z * 3.4 + warpA * 7.0 - t * 3.2;
+            float streakA = line(pathA, 14.0);
+            streakA += 0.62 * line(pathA * 0.63 + 1.7, 18.0);
+            streakA += 0.30 * line(pathA * 1.72 - 0.6, 20.0);
+
+            // Downward stream turns from the bridge into the rounded tail.
+            float tailMask = (1.0 - smoothstep(-1.52, 0.18, p.y)) * (1.0 - smoothstep(0.05, 1.05, abs(p.x - 0.18)));
+            float warpB = fbm(vec3(p.x * 1.7, p.y * 0.78 + t * 0.43, p.z * 2.2));
+            float pathB = (p.x - 0.18) * 9.0 - p.y * 1.35 + p.z * 3.0 + warpB * 6.0 - t * 3.5;
+            float streakB = line(pathB, 15.0) + 0.50 * line(pathB * 0.58 + 2.1, 18.0);
+
+            float stream = streakA * (1.0 - tailMask * 0.38) + streakB * tailMask * 1.35;
+
+            // Keep the luminous strands inside the glossy body rather than painting it solid.
+            float organic = smoothstep(0.36, 0.83, fbm(vec3(p * vec3(1.15, 1.7, 3.0) + vec3(-t * 0.52, 0.0, t * 0.12))));
+            stream *= mix(0.48, 1.18, organic);
+
+            float grad = smoothstep(-1.25, 1.35, p.x + max(-p.y - 0.25, 0.0) * 0.36);
+            vec3 blue = vec3(0.01, 0.18, 1.00);
+            vec3 violet = vec3(0.34, 0.015, 1.00);
+            vec3 magenta = vec3(1.00, 0.00, 0.82);
+            vec3 col = mix(blue, violet, smoothstep(0.0, 0.58, grad));
+            col = mix(col, magenta, smoothstep(0.48, 1.0, grad));
+
+            vec3 V = normalize(cameraPosition - vWorldPosition);
+            float fresnel = pow(1.0 - abs(dot(normalize(vNormalW), V)), 2.0);
+            float core = stream * (0.62 + 0.38 * fresnel);
+            float alpha = clamp(core * 0.55 * uIntensity, 0.0, 0.74);
+            gl_FragColor = vec4(col * core * 2.25, alpha);
+          }
+        `
+      });
+    }
+
+    function makeRimMaterial() {
+      return new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        side: THREE.BackSide,
+        uniforms: { uTime: { value: 0 } },
+        vertexShader: /* glsl */`
+          varying vec3 vP;
+          varying vec3 vWorld;
+          varying vec3 vN;
+          void main() {
+            vP = position;
+            vec4 wp = modelMatrix * vec4(position, 1.0);
+            vWorld = wp.xyz;
+            vN = normalize(mat3(modelMatrix) * normal);
+            gl_Position = projectionMatrix * viewMatrix * wp;
+          }
+        `,
+        fragmentShader: /* glsl */`
+          uniform float uTime;
+          varying vec3 vP;
+          varying vec3 vWorld;
+          varying vec3 vN;
+          void main() {
+            vec3 V = normalize(cameraPosition - vWorld);
+            float f = pow(1.0 - abs(dot(normalize(vN), V)), 4.1);
+            float grad = smoothstep(-1.25, 1.28, vP.x + max(-vP.y - 0.2, 0.0) * 0.38);
+            vec3 leftC = vec3(0.08, 0.28, 1.0);
+            vec3 rightC = vec3(1.0, 0.02, 0.86);
+            vec3 c = mix(leftC, rightC, grad);
+            float shimmer = 0.83 + 0.17 * sin(vP.y * 8.0 + vP.x * 3.0 - uTime * 1.7);
+            gl_FragColor = vec4(c * f * 2.0 * shimmer, f * 0.72);
+          }
+        `
+      });
+    }
+
+    function fitCameraToObject(object) {
+      const box = new THREE.Box3().setFromObject(object);
+      const sphere = box.getBoundingSphere(new THREE.Sphere());
+      object.position.sub(sphere.center);
+      const fov = THREE.MathUtils.degToRad(camera.fov);
+      const distance = sphere.radius / Math.sin(fov / 2) * 0.72;
+      camera.position.set(0, 0.02, Math.max(distance, 6.5));
+      controls.target.set(0, -0.05, 0);
+      controls.update();
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const t = clock.getElapsedTime();
+      for (const material of animatedMaterials) material.uniforms.uTime.value = t;
+      if (logoRoot) {
+        logoRoot.position.y = Math.sin(t * 0.72) * 0.045;
+        logoRoot.rotation.z = -0.015 + Math.sin(t * 0.31) * 0.014;
+        shadow.material.opacity = 0.42 - Math.sin(t * 0.72) * 0.035;
+      }
+      controls.update();
+      composer.render();
+    }
+    animate();
+
+    addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      composer.setSize(innerWidth, innerHeight);
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    });
+  </script>
+</body>
+</html>

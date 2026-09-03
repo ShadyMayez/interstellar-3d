@@ -1,0 +1,34 @@
+Starting browser...
+Navigating to http://localhost:5173/...
+[REQUEST] http://localhost:5173/
+[REQUEST] http://localhost:5173/assets/index-qiB-A8cy.js
+[REQUEST] http://localhost:5173/assets/index-CydEjiIK.css
+[CONSOLE WARN] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead.
+[REQUEST] http://localhost:5173/assets/js/lib/_draco/draco_wasm_wrapper.js
+[CONSOLE WARN] [GroupMarkerNotSet(crbug.com/242999)!:25AC01DB10A0]Automatic fallback to software WebGL has been deprecated. Please use the --enable-unsafe-swiftshader (about:flags#enable-unsafe-swiftshader) flag to opt in to lower security guarantees for trusted content.
+[REQUEST] http://localhost:5173/assets/js/lib/_draco/draco_decoder.wasm
+[CONSOLE LOG] [Main] Draco ready
+[REQUEST] http://localhost:5173/models/axlera_liquid_logo.glb
+[REQUEST] http://localhost:5173/favicon.ico
+[404 NOT FOUND] http://localhost:5173/favicon.ico
+[CONSOLE ERROR] Failed to load resource: the server responded with a status of 404 (Not Found)
+[CONSOLE LOG] [LogoScene] Loaded axlera_liquid_logo.glb
+[REQUEST] http://localhost:5173/assets/geometry/spine/spine.bin
+[CONSOLE LOG] [Spine] Loaded spine.bin
+[REQUEST] http://localhost:5173/assets/geometry/particles/flower_spine-128.bin
+[CONSOLE LOG] [Particles] Loaded /assets/geometry/particles/flower_spine-128.bin
+[REQUEST] http://localhost:5173/assets/geometry/particles/forest-128.bin
+[CONSOLE LOG] [Particles] Loaded /assets/geometry/particles/forest-128.bin
+Fatal Error: Error: Navigating frame was detached
+    at <instance_members_initializer> (file:///home/shady/node_modules/puppeteer-core/lib/puppeteer/cdp/LifecycleWatcher.js:33:14)
+    at new LifecycleWatcher (file:///home/shady/node_modules/puppeteer-core/lib/puppeteer/cdp/LifecycleWatcher.js:37:16)
+    at CdpFrame.goto (file:///home/shady/node_modules/puppeteer-core/lib/puppeteer/cdp/Frame.js:150:29)
+    at CdpFrame.<anonymous> (file:///home/shady/node_modules/puppeteer-core/lib/puppeteer/util/decorators.js:101:27)
+    at CdpPage.goto (file:///home/shady/node_modules/puppeteer-core/lib/puppeteer/api/Page.js:576:43)
+    at /home/shady/.gemini/antigravity/brain/6acca31b-a75e-49d6-9cfb-47cc019f151a/scratch/capture_logo_scroll.cjs:50:14 {
+  cause: Error: LifecycleWatcher disposed
+      at LifecycleWatcher.dispose (file:///home/shady/node_modules/puppeteer-core/lib/puppeteer/cdp/LifecycleWatcher.js:170:29)
+      at CdpFrame.goto (file:///home/shady/node_modules/puppeteer-core/lib/puppeteer/cdp/Frame.js:170:25)
+      at async CdpPage.goto (file:///home/shady/node_modules/puppeteer-core/lib/puppeteer/api/Page.js:576:20)
+      at async /home/shady/.gemini/antigravity/brain/6acca31b-a75e-49d6-9cfb-47cc019f151a/scratch/capture_logo_scroll.cjs:50:3
+}

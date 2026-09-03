@@ -1,0 +1,7 @@
+node_modules/
+active-theory-local-viewer/node_modules/
+active-theory-local-viewer/dist/
+viewer/node_modules/
+*.zip
+.DS_Store
+server.log

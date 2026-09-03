@@ -1,0 +1,47 @@
+
+IMPORTANT: I have a real 3D model file now. Do not generate an image. Do not recreate it as a flat PNG.
+Use the GLB model in this zip as the website logo object.
+
+Files:
+- models/axlera_liquid_logo.glb = main high-quality 3D logo
+- models/axlera_liquid_logo_low.glb = optimized fallback
+- textures/liquid_flow_map.png = flow direction guide/map
+- implementation/threejs_loader_liquid_shader.js = loader + liquid shader reference
+
+Task:
+Implement this 3D logo in the website as a cinematic, heavy-liquid logo object.
+
+Requirements:
+1. Load models/axlera_liquid_logo.glb using Three.js GLTFLoader.
+2. Center the model and keep it Y-up.
+3. Do not use the default flat material only. Replace the material with a heavy liquid/glass material.
+4. The object must look like dense glossy liquid resin, not plastic and not a flat image.
+5. Keep the colors from the model: deep navy/indigo on the left, magenta/violet on the center/right, subtle cyan-blue highlights.
+6. Add animated internal flow highlights following the same directions as the annotation:
+   - stream from upper-left across the horizontal body to the right tip
+   - stream from the center down the lower droplet, then curling upward toward the right section
+7. The flow should be subtle and premium: use shader highlights/noise/reflections, not arrows.
+8. Add slow rotation and mouse parallax only.
+9. Add lighting:
+   - dark environment/background
+   - cyan rim light from left/front
+   - purple/magenta light from right/back
+   - soft white top reflection
+10. Add postprocessing:
+   - subtle bloom
+   - tiny film grain
+   - very small chromatic aberration only if needed
+11. Do not make the object too bright or cartoonish. It should look heavy, glossy, and premium.
+12. On scroll/hero section, let the logo float and slowly deform visually through shader noise, but do not change the actual mesh silhouette too much.
+
+Suggested Three.js setup:
+- Use MeshPhysicalMaterial with clearcoat: 1, roughness: 0.14–0.22, transmission: 0.1–0.25, thickness: 0.8–1.2, ior: 1.45–1.5, envMapIntensity: 1.4–2.0.
+- Use the included shader snippet in implementation/threejs_loader_liquid_shader.js.
+- Enable vertexColors because the GLB includes baked color gradients.
+
+Acceptance criteria:
+- The logo is a real 3D mesh, not an image plane.
+- It has thickness and glossy rounded edges.
+- It preserves the original logo silhouette.
+- The liquid appears to flow in the requested directions.
+- It is ready to use inside the current cinematic website scene.

@@ -1,0 +1,45 @@
+{
+  "name": "AXLERA / AXLORA liquid logo 3D model",
+  "source": "procedural mesh generated from uploaded logo alpha silhouette",
+  "primary_model": "models/axlera_liquid_logo.glb",
+  "low_model": "models/axlera_liquid_logo_low.glb",
+  "coordinate_system": "Y-up, centered around origin",
+  "recommended_scale_threejs": "1.0 to 1.8 depending on scene",
+  "high_mesh": {
+    "vertices": 160782,
+    "faces": 319330,
+    "bounds": [
+      [
+        -1.8920791552559204,
+        -1.6699266094118255,
+        -0.42999924912634896
+      ],
+      [
+        1.8920744977895363,
+        1.669931394328344,
+        0.42999924202292444
+      ]
+    ]
+  },
+  "low_mesh": {
+    "vertices": 50976,
+    "faces": 100750,
+    "bounds": [
+      [
+        -1.885477004386776,
+        -1.662459949244766,
+        -0.4299982305176529
+      ],
+      [
+        1.8850891353030164,
+        1.6628846036822011,
+        0.4299982316347427
+      ]
+    ]
+  },
+  "included_textures": [
+    "textures/source_logo_upscaled.png",
+    "textures/liquid_flow_map.png"
+  ],
+  "material_notes": "GLB contains vertex colors. For the heavy liquid moving-flow look, replace the material in Three.js with the included shader snippet/prompt."
+}
