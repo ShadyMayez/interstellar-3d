@@ -1,157 +1,372 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-function createHeavyLiquidMaterial() {
-  const material = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#12002e'),
-    metalness: 0.03,
-    roughness: 0.18,
-    clearcoat: 1.0,
-    clearcoatRoughness: 0.08,
-    transmission: 0.15,
-    thickness: 0.9,
-    ior: 1.48,
-    envMapIntensity: 1.6,
-    vertexColors: true,
-    side: THREE.DoubleSide
-  });
+function makeMasterLogoMaterial(geometry) {
+geometry.computeBoundingBox();
+const min = geometry.boundingBox.min;
+const max = geometry.boundingBox.max;
 
-  material.onBeforeCompile = (shader) => {
-    shader.uniforms.uTime = { value: 0 };
-    shader.uniforms.uFlowStrength = { value: 0.9 };
+return new THREE.ShaderMaterial({
+transparent: false,
+depthWrite: true,
+depthTest: true,
+side: THREE.DoubleSide,
+uniforms: {
+uTime: { value: 0 },
+uMin: { value: min.clone() },
+uMax: { value: max.clone() }
+},
+vertexShader: /* glsl */`
+varying vec3 vObjectPosition;
+varying vec3 vWorldPosition;
+varying vec3 vNormalW;
+void main() {
+vObjectPosition = position;
+vec4 wp = modelMatrix * vec4(position, 1.0);
+vWorldPosition = wp.xyz;
+vNormalW = normalize(mat3(modelMatrix) * normal);
+gl_Position = projectionMatrix * viewMatrix * wp;
+}
+`,
+fragmentShader: /* glsl */`
+precision highp float;
+uniform float uTime;
+uniform vec3 uMin;
+uniform vec3 uMax;
+varying vec3 vObjectPosition;
+varying vec3 vWorldPosition;
+varying vec3 vNormalW;
 
-    shader.vertexShader = shader.vertexShader.replace(
-      '#include <common>',
-      `#include <common>
-       varying vec3 vWorldPos;
-       varying vec3 vObjPos;
-       varying vec3 vNormalFlow;`
-    );
+vec3 getMappedPos(vec3 pos) {
+vec3 norm = (pos - uMin) / (uMax - uMin + 1e-5);
+vec3 targetMin = vec3(-2.305, -1.810, -0.730);
+vec3 targetMax = vec3(2.305, 1.810, 0.730);
+return targetMin + norm * (targetMax - targetMin);
+}
 
-    shader.vertexShader = shader.vertexShader.replace(
-      '#include <worldpos_vertex>',
-      `#include <worldpos_vertex>
-       vWorldPos = worldPosition.xyz;
-       vObjPos = position;
-       vNormalFlow = normal;`
-    );
+float hash31(vec3 p) {
+p = fract(p * 0.1031);
+p += dot(p, p.yzx + 33.33);
+return fract((p.x + p.y) * p.z);
+}
 
-    shader.fragmentShader = shader.fragmentShader.replace(
-      '#include <common>',
-      `#include <common>
-       uniform float uTime;
-       uniform float uFlowStrength;
-       varying vec3 vWorldPos;
-       varying vec3 vObjPos;
-       varying vec3 vNormalFlow;
+float noise3d(vec3 p) {
+vec3 i = floor(p), f = fract(p);
+f = f * f * (3.0 - 2.0 * f);
+float n000 = hash31(i + vec3(0,0,0));
+float n100 = hash31(i + vec3(1,0,0));
+float n010 = hash31(i + vec3(0,1,0));
+float n110 = hash31(i + vec3(1,1,0));
+float n001 = hash31(i + vec3(0,0,1));
+float n101 = hash31(i + vec3(1,0,1));
+float n011 = hash31(i + vec3(0,1,0));
+float n111 = hash31(i + vec3(1,1,1));
+return mix(mix(mix(n000,n100,f.x),mix(n010,n110,f.x),f.y),
+mix(mix(n001,n101,f.x),mix(n011,n111,f.x),f.y),f.z);
+}
 
-       float flowLine(vec2 p, vec2 a, vec2 b, float width) {
-         vec2 pa = p - a;
-         vec2 ba = b - a;
-         float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
-         float d = length(pa - ba * h);
-         return exp(-(d * d) / (2.0 * width * width));
-       }
+float fbm(vec3 p) {
+float v = 0.0;
+float a = 0.5;
+vec3 shift = vec3(100.0);
+for (int i = 0; i < 4; i++) {
+v += a * noise3d(p);
+p = p * 2.04 + shift;
+a *= 0.5;
+}
+return v;
+}
 
-       float liquidFlow(vec2 p, float t) {
-         float f = 0.0;
-         f += flowLine(p, vec2(-1.65, 0.52), vec2(-0.35, 0.03), 0.075) * (0.55 + 0.45*sin(t + p.x*5.0));
-         f += flowLine(p, vec2(-0.35, 0.03), vec2(1.55, 0.28), 0.075) * (0.55 + 0.45*sin(t*1.1 + p.x*4.0));
-         f += flowLine(p, vec2(-0.62,-0.35), vec2(0.02,-1.25), 0.09) * (0.55 + 0.45*sin(t*1.2 + p.y*6.0));
-         f += flowLine(p, vec2(0.02,-1.25), vec2(1.35, 0.06), 0.095) * (0.55 + 0.45*sin(t*1.3 + p.x*5.0));
-         return clamp(f, 0.0, 1.0);
-       }`
-    );
+vec3 getRampColor(float f) {
+f = clamp(f, 0.0, 1.0);
 
-    shader.fragmentShader = shader.fragmentShader.replace(
-      '#include <color_fragment>',
-      `#include <color_fragment>
-       vec2 p = vObjPos.xy;
-       float flow = liquidFlow(p, uTime * 0.9) * uFlowStrength;
-       vec3 deepNavy = vec3(0.005, 0.02, 0.11);
-       vec3 electricBlue = vec3(0.0, 0.22, 1.0);
-       vec3 violet = vec3(0.45, 0.02, 1.0);
-       vec3 magenta = vec3(1.0, 0.0, 0.92);
-       vec3 hotWhite = vec3(1.0, 0.83, 1.0);
-       float xGrad = smoothstep(-1.8, 1.8, p.x);
-       vec3 liquidBase = mix(deepNavy, magenta, xGrad);
-       vec3 flowColor = mix(electricBlue, hotWhite, smoothstep(0.35, 0.95, flow));
-       diffuseColor.rgb = mix(diffuseColor.rgb * liquidBase * 1.45, flowColor, flow * 0.55);
-       diffuseColor.rgb += violet * pow(max(dot(normalize(vNormalFlow), normalize(vec3(-0.4,0.8,0.6))), 0.0), 3.0) * 0.35;`
-    );
+vec3 c0  = vec3(0.0118, 0.0863, 0.2431); // #03163e (Dark Navy Node)
+vec3 c1  = vec3(0.1882, 0.0667, 0.3961); // #301165
+vec3 c2  = vec3(0.3255, 0.0549, 0.5176); // #530e84
+vec3 c3  = vec3(0.4549, 0.0431, 0.6314); // #740ba1
+vec3 c4  = vec3(0.6078, 0.0275, 0.7647); // #9b07c3
+vec3 c5  = vec3(0.6588, 0.0196, 0.8118); // #a805cf
+vec3 c6  = vec3(0.7569, 0.0118, 0.8980); // #c103e5 (PEAK BRIGHT MAGENTA)
+vec3 c7  = vec3(0.3961, 0.0471, 0.5804); // #650c94
+vec3 c8  = vec3(0.2510, 0.0627, 0.4510); // #401073
+vec3 c9  = vec3(0.1804, 0.0706, 0.3922); // #2e1264
+vec3 c10 = vec3(0.0118, 0.0863, 0.2431); // #03163e
 
-    material.userData.shader = shader;
-  };
+if (f < 0.10) return mix(c0, c1, f / 0.10);
+if (f < 0.20) return mix(c1, c2, (f - 0.10) / 0.10);
+if (f < 0.30) return mix(c2, c3, (f - 0.20) / 0.10);
+if (f < 0.40) return mix(c3, c4, (f - 0.30) / 0.10);
+if (f < 0.48) return mix(c4, c5, (f - 0.40) / 0.08);
+if (f < 0.52) return mix(c5, c6, (f - 0.48) / 0.04);
+if (f < 0.65) return mix(c6, c7, (f - 0.52) / 0.13);
+if (f < 0.78) return mix(c7, c8, (f - 0.65) / 0.13);
+if (f < 0.90) return mix(c8, c9, (f - 0.78) / 0.12);
+return mix(c9, c10, (f - 0.90) / 0.10);
+}
 
-  return material;
+void main() {
+vec3 p = getMappedPos(vObjectPosition);
+float t = uTime * 0.35;
+
+vec3 V = normalize(cameraPosition - vWorldPosition);
+vec3 N = normalize(vNormalW);
+float NdotV = abs(dot(N, V));
+
+float dTopLeft = length(vec2(p.x - (-0.95), p.y - 0.75));
+float darkBigNodeMask = smoothstep(1.30, 0.40, dTopLeft);
+
+float darkEdge1 = smoothstep(0.35, 1.20, p.x) * smoothstep(-0.5, 0.7, p.y);
+
+float dBottomEdge = length(vec2(p.x - 0.05, p.y - (-1.25)));
+float darkEdge2 = smoothstep(0.75, 0.15, dBottomEdge);
+
+float flowTime = uTime * 0.7;
+vec3 flowP = p * 1.6 + vec3(sin(flowTime * 0.5) * 0.5, flowTime * 0.4, cos(flowTime * 0.5) * 0.5);
+
+vec3 q = vec3(fbm(flowP + vec3(0.0, 0.0, 0.0)),
+fbm(flowP + vec3(5.2, 1.3, 0.0)),
+fbm(flowP + vec3(1.7, 2.8, 0.0)));
+
+vec3 r = vec3(fbm(flowP + 3.0 * q + vec3(1.7, 0.4, flowTime * 0.2)),
+fbm(flowP + 3.0 * q + vec3(8.3, 2.8, flowTime * 0.15)),
+fbm(flowP + 3.0 * q + vec3(3.2, 1.1, flowTime * 0.25)));
+
+float fluidSmoke = fbm(flowP + 2.5 * r);
+
+float distCenterBridge = length(vec2(p.x - 0.20, p.y - 0.10));
+float peakFactor = exp(-distCenterBridge * distCenterBridge * 3.5);
+
+float ribbonPos = smoothstep(-0.8, 0.6, p.x);
+float rampT = mix(ribbonPos * 0.5, 0.50, peakFactor);
+
+rampT += (fluidSmoke - 0.5) * 0.45;
+rampT = clamp(rampT, 0.05, 0.95);
+
+vec3 colorLiquid = getRampColor(rampT);
+vec3 darkNavy = vec3(0.0118, 0.0863, 0.2431); // #03163e
+
+float totalDarkMask = clamp(darkBigNodeMask + darkEdge1 * 0.90 + darkEdge2 * 0.90, 0.0, 1.0);
+
+vec3 baseColor = mix(colorLiquid, darkNavy, totalDarkMask);
+
+// Studio Lighting
+vec3 keyLightDir = normalize(vec3(-0.4, 0.85, 0.75));
+vec3 fillLightDir = normalize(vec3(0.6, -0.3, 0.5));
+float NdotL1 = max(dot(N, keyLightDir), 0.0);
+float NdotL2 = max(dot(N, fillLightDir), 0.0);
+
+float studioLight = NdotL1 * 0.65 + NdotL2 * 0.25 + 0.25;
+vec3 shadedColor = baseColor * studioLight;
+
+// Rich Tinted Specular (Deep magenta/purple glint - strictly no white)
+vec3 H1 = normalize(keyLightDir + V);
+float specSharp = pow(max(dot(N, H1), 0.0), 120.0);
+float specBroad = pow(max(dot(N, H1), 0.0), 20.0);
+vec3 specular = vec3(0.40, 0.05, 0.50) * specSharp * 0.8 + vec3(0.20, 0.02, 0.30) * specBroad * 0.15;
+
+vec3 R = reflect(-V, N);
+float studioRefl = pow(max(dot(R, normalize(vec3(-0.35, 0.75, 0.55))), 0.0), 10.0);
+specular += vec3(0.25, 0.02, 0.35) * studioRefl * 0.20;
+
+// Smooth Dark Violet Silhouette Rim (No white edge fringes)
+float fresnel = pow(1.0 - NdotV, 4.0);
+vec3 purpleRim = vec3(0.25, 0.02, 0.35);
+vec3 darkRim = vec3(0.01, 0.03, 0.12);
+
+vec3 rimColor = mix(purpleRim, darkRim, darkBigNodeMask);
+vec3 glassRim = rimColor * fresnel * 0.25;
+
+float dHoleCenter = length(vec2(p.x - 0.10, p.y + 0.35));
+float holeAO = smoothstep(0.08, 0.38, dHoleCenter);
+shadedColor *= mix(0.55, 1.0, holeAO);
+
+vec3 finalColor = shadedColor + specular + glassRim;
+gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0);
+}
+`
+});
+}
+
+function makeMasterTextMaterial(geometry) {
+geometry.computeBoundingBox();
+const min = geometry.boundingBox.min;
+const max = geometry.boundingBox.max;
+
+return new THREE.ShaderMaterial({
+transparent: false,
+depthWrite: true,
+depthTest: true,
+side: THREE.DoubleSide,
+uniforms: {
+uTime: { value: 0 },
+uMin: { value: min.clone() },
+uMax: { value: max.clone() }
+},
+vertexShader: /* glsl */`
+varying vec3 vObjectPosition;
+varying vec3 vWorldPosition;
+varying vec3 vNormalW;
+void main() {
+vObjectPosition = position;
+vec4 wp = modelMatrix * vec4(position, 1.0);
+vWorldPosition = wp.xyz;
+vNormalW = normalize(mat3(modelMatrix) * normal);
+gl_Position = projectionMatrix * viewMatrix * wp;
+}
+`,
+fragmentShader: /* glsl */`
+precision highp float;
+uniform float uTime;
+uniform vec3 uMin;
+uniform vec3 uMax;
+varying vec3 vObjectPosition;
+varying vec3 vWorldPosition;
+varying vec3 vNormalW;
+
+vec3 getRampColor(float f) {
+f = clamp(f, 0.0, 1.0);
+vec3 c0  = vec3(0.0118, 0.0863, 0.2431); // #03163e
+vec3 c1  = vec3(0.1882, 0.0667, 0.3961); // #301165
+vec3 c2  = vec3(0.3255, 0.0549, 0.5176); // #530e84
+vec3 c3  = vec3(0.4549, 0.0431, 0.6314); // #740ba1
+vec3 c4  = vec3(0.6078, 0.0275, 0.7647); // #9b07c3
+vec3 c5  = vec3(0.6588, 0.0196, 0.8118); // #a805cf
+vec3 c6  = vec3(0.7569, 0.0118, 0.8980); // #c103e5 (PEAK BRIGHT MAGENTA)
+vec3 c7  = vec3(0.3961, 0.0471, 0.5804); // #650c94
+vec3 c8  = vec3(0.2510, 0.0627, 0.4510); // #401073
+vec3 c9  = vec3(0.1804, 0.0706, 0.3922); // #2e1264
+vec3 c10 = vec3(0.0118, 0.0863, 0.2431); // #03163e
+
+if (f < 0.10) return mix(c0, c1, f / 0.10);
+if (f < 0.20) return mix(c1, c2, (f - 0.10) / 0.10);
+if (f < 0.30) return mix(c2, c3, (f - 0.20) / 0.10);
+if (f < 0.40) return mix(c3, c4, (f - 0.30) / 0.10);
+if (f < 0.48) return mix(c4, c5, (f - 0.40) / 0.08);
+if (f < 0.52) return mix(c5, c6, (f - 0.48) / 0.04);
+if (f < 0.65) return mix(c6, c7, (f - 0.52) / 0.13);
+if (f < 0.78) return mix(c7, c8, (f - 0.65) / 0.13);
+if (f < 0.90) return mix(c8, c9, (f - 0.78) / 0.12);
+return mix(c9, c10, (f - 0.90) / 0.10);
+}
+
+void main() {
+// Normalized position along the text bounding box (0.0 at 'I', 1.0 at 'r')
+float xNorm = (vObjectPosition.x - uMin.x) / (uMax.x - uMin.x + 1e-5);
+float yNorm = (vObjectPosition.y - uMin.y) / (uMax.y - uMin.y + 1e-5);
+
+vec3 V = normalize(cameraPosition - vWorldPosition);
+vec3 N = normalize(vNormalW);
+float NdotV = abs(dot(N, V));
+
+// Letter 'a' Mask (11th character in Interstellar): located around xNorm ~ 0.76 to 0.88
+float isLetterA = smoothstep(0.76, 0.79, xNorm) * (1.0 - smoothstep(0.87, 0.90, xNorm));
+
+// Top-right curve of letter 'a' has the glowing magenta/purple liquid gradient matching THUSA.png
+float aGradient = smoothstep(0.10, 0.90, (xNorm - 0.76) / 0.11 + (yNorm - 0.25) * 0.9);
+aGradient = clamp(aGradient, 0.0, 1.0);
+
+vec3 darkObsidian = vec3(0.0118, 0.0863, 0.2431); // #03163e
+vec3 brightLiquid = getRampColor(mix(0.35, 0.50, aGradient)); // #a805cf -> #c103e5
+
+// All letters are solid high-gloss dark #03163e except letter 'a' top-right curve!
+vec3 baseColor = mix(darkObsidian, brightLiquid, isLetterA * aGradient * 0.98);
+
+// Studio Lighting
+vec3 keyLightDir = normalize(vec3(-0.4, 0.85, 0.75));
+vec3 fillLightDir = normalize(vec3(0.6, -0.3, 0.5));
+float NdotL1 = max(dot(N, keyLightDir), 0.0);
+float NdotL2 = max(dot(N, fillLightDir), 0.0);
+
+float studioLight = NdotL1 * 0.65 + NdotL2 * 0.25 + 0.25;
+vec3 shadedColor = baseColor * studioLight;
+
+// Specular Clearcoat Wet Glint
+vec3 H1 = normalize(keyLightDir + V);
+float specSharp = pow(max(dot(N, H1), 0.0), 160.0);
+float specBroad = pow(max(dot(N, H1), 0.0), 22.0);
+vec3 specular = vec3(1.0) * (specSharp * 1.6 + specBroad * 0.30);
+
+// Studio Box Reflection
+vec3 R = reflect(-V, N);
+float studioRefl = pow(max(dot(R, normalize(vec3(-0.35, 0.75, 0.55))), 0.0), 10.0);
+specular += vec3(0.95, 0.98, 1.0) * studioRefl * 0.55;
+
+// Fresnel Glass Rim
+float fresnel = pow(1.0 - NdotV, 3.2);
+vec3 rimColor = mix(vec3(0.75, 0.82, 0.95), vec3(0.85, 0.10, 0.95), isLetterA * 0.85);
+vec3 glassRim = rimColor * fresnel * 0.85;
+
+vec3 finalColor = shadedColor + specular + glassRim;
+gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0);
+}
+`
+});
 }
 
 export function createLogoMesh() {
-  const logoGroup = new THREE.Group();
-  const animatedMaterials = [];
+const logoGroup = new THREE.Group();
+const animatedMaterials = [];
 
-  const loader = new GLTFLoader();
+const loader = new GLTFLoader();
 
-  // Load Axlera Heavy Liquid 3D Logo GLB with MeshPhysicalMaterial glassy transmission shell
-  loader.load('/models/axlera_liquid_logo.glb', (gltf) => {
-    const logoMeshGroup = gltf.scene;
-    logoMeshGroup.scale.setScalar(1.6);
-    logoMeshGroup.position.set(-2.0, 0.0, 0.0);
+// Load 3D Swollen Liquid Logo Mark (Pure Copilot3D GLB)
+loader.load('/models/Copilot3D_clean.glb', (gltf) => {
+const logoMeshGroup = gltf.scene;
+logoMeshGroup.scale.setScalar(2.6);
+logoMeshGroup.position.set(-2.8, 0.0, 0.0);
 
-    const liquidMat = createHeavyLiquidMaterial();
-    animatedMaterials.push(liquidMat);
+logoMeshGroup.traverse((obj) => {
+if (obj.isMesh) {
+obj.geometry.computeVertexNormals();
+obj.geometry.computeBoundingSphere();
 
-    logoMeshGroup.traverse((child) => {
-      if (child.isMesh) {
-        child.geometry.computeVertexNormals();
-        child.material = liquidMat;
-      }
-    });
-
-    logoGroup.add(logoMeshGroup);
-    console.log('[LogoScene] Loaded axlera_liquid_logo.glb with heavy liquid glass material');
-  }, undefined, (err) => {
-    console.error('[LogoScene] Failed to load axlera_liquid_logo.glb:', err);
-  });
-
-  // Load 3D Text Mesh (Interstellar with custom 3D swollen 'a')
-  loader.load('/assets/geometry/interstellar_text.glb', (gltf) => {
-    const textScene = gltf.scene;
-
-    const bbox = new THREE.Box3().setFromObject(textScene);
-    const center = bbox.getCenter(new THREE.Vector3());
-
-    textScene.scale.setScalar(0.75);
-    textScene.position.set(-center.x * 0.75 + 1.0, 0.0, -center.z * 0.75);
-
-    textScene.traverse((obj) => {
-      if (obj.isMesh) {
-        obj.material = new THREE.MeshStandardMaterial({
-          color: new THREE.Color('#03163e'),
-          roughness: 0.20,
-          metalness: 0.10,
-          side: THREE.FrontSide,
-        });
-      }
-    });
-
-    logoGroup.add(textScene);
-    console.log('[LogoScene] Loaded interstellar_text.glb successfully');
-  }, undefined, (err) => {
-    console.error('[LogoScene] Failed to load interstellar_text.glb:', err);
-  });
-
-  return {
-    group: logoGroup,
-    update(t) {
-      if (logoGroup.children.length > 0) {
-        logoGroup.rotation.y = Math.sin(t * 0.4) * 0.08;
-      }
-      for (const mat of animatedMaterials) {
-        if (mat.userData && mat.userData.shader && mat.userData.shader.uniforms && mat.userData.shader.uniforms.uTime) {
-          mat.userData.shader.uniforms.uTime.value = t;
-        }
-      }
-    }
-  };
+const masterMat = makeMasterLogoMaterial(obj.geometry);
+obj.material = masterMat;
+animatedMaterials.push(masterMat);
 }
+});
+
+logoGroup.add(logoMeshGroup);
+}, undefined, (err) => {
+console.error('[LogoScene] Failed to load Copilot3D_clean.glb:', err);
+});
+
+// Load 3D Text Mesh (Interstellar with user's custom 3D swollen 'a')
+loader.load('/assets/geometry/interstellar_text.glb', (gltf) => {
+const textScene = gltf.scene;
+
+const bbox = new THREE.Box3().setFromObject(textScene);
+const center = bbox.getCenter(new THREE.Vector3());
+
+textScene.scale.setScalar(0.70);
+textScene.position.set(-center.x * 0.70 + 0.60, 0.0, -center.z * 0.70 + 0.0);
+
+textScene.traverse((obj) => {
+if (obj.isMesh) {
+obj.geometry.computeVertexNormals();
+
+const textMat = makeMasterTextMaterial(obj.geometry);
+obj.material = textMat;
+animatedMaterials.push(textMat);
+}
+});
+
+logoGroup.add(textScene);
+console.log('[LogoScene] Loaded interstellar_text.glb successfully');
+}, undefined, (err) => {
+console.error('[LogoScene] Failed to load interstellar_text.glb:', err);
+});
+
+return {
+group: logoGroup,
+update(t) {
+if (logoGroup.children.length > 0) {
+logoGroup.rotation.y = Math.sin(t * 0.4) * 0.08;
+}
+for (const mat of animatedMaterials) {
+mat.uniforms.uTime.value = t;
+}
+}
+};
+}
+
