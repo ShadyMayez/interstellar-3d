@@ -89,7 +89,7 @@ export async function loadSpineMesh(dracoInstance) {
           const segmentMesh = new THREE.Mesh(geom, mat);
           segmentMesh.scale.set(2.3, 2.3, 2.3);
           const yPos = 4.0 - i * 0.42; // Spans vertically from +4.0 down to -12.4
-          segmentMesh.position.set(0.6, yPos, -0.6);
+          segmentMesh.position.set(0.0, yPos, -0.6);
           segmentMesh.rotation.y = i * 0.40;
           group.add(segmentMesh);
         }
