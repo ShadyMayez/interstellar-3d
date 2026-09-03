@@ -331,56 +331,41 @@ export function createLogoMesh() {
     console.error('[LogoScene] Failed to load Copilot3D_clean.glb:', err);
   });
 
-  // Load 3D Text Mesh (Interstellar with user's custom 3D swollen 'a')
-  loader.load('/models/interstellar_text.glb', (gltf) => {
-    const textScene = gltf.scene;
+  // Load THUSA Image Texture to replace 3D Interstellar text model
+  const textureLoader = new THREE.TextureLoader();
+  textureLoader.load('/images/THUSA-removebg-preview.png', (texture) => {
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
 
-    // Recenter child meshes so Custom_3D_Letter_A (offset high in gltf) aligns with TextMain
-    textScene.traverse((obj) => {
-      if (obj.isMesh) {
-        obj.geometry.computeBoundingBox();
-        const b = obj.geometry.boundingBox;
-        const centerY = (b.min.y + b.max.y) * 0.5;
-        if (centerY > 1.5) {
-          obj.position.y = -centerY;
-        }
-      }
+    // Aspect ratio 3.007 (866x288) -> 4.5 x 1.5 units plane
+    const planeGeom = new THREE.PlaneGeometry(4.5, 1.5);
+    const planeMat = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 1.0,
+      side: THREE.DoubleSide,
+      depthWrite: false
     });
 
-    const bbox = new THREE.Box3().setFromObject(textScene);
-    const center = bbox.getCenter(new THREE.Vector3());
+    const thusaMesh = new THREE.Mesh(planeGeom, planeMat);
+    thusaMesh.position.set(0.70, 0.0, 0.0);
+    logoGroup.add(thusaMesh);
 
-    // Scale and position 3D Interstellar text beside liquid logo mark
-    const textScale = 0.052;
-    textScene.scale.setScalar(textScale);
-    textScene.position.set(-center.x * textScale + 0.60, -center.y * textScale, -center.z * textScale);
-
-    textScene.traverse((obj) => {
-      if (obj.isMesh) {
-        obj.geometry.computeVertexNormals();
-
-        const textMat = makeMasterTextMaterial(obj.geometry);
-        obj.material = textMat;
-        animatedMaterials.push(textMat);
-      }
-    });
-
-    logoGroup.add(textScene);
-    console.log('[LogoScene] Loaded 3D Interstellar text mesh successfully!');
+    console.log('[LogoScene] Loaded THUSA-removebg-preview.png texture successfully!');
   }, undefined, (err) => {
-    console.error('[LogoScene] Failed to load interstellar_text.glb:', err);
+    console.error('[LogoScene] Failed to load THUSA-removebg-preview.png:', err);
   });
 
-return {
-group: logoGroup,
-update(t) {
-if (logoGroup.children.length > 0) {
-logoGroup.rotation.y = Math.sin(t * 0.4) * 0.08;
-}
-for (const mat of animatedMaterials) {
-mat.uniforms.uTime.value = t;
-}
-}
-};
+  return {
+    group: logoGroup,
+    update(t) {
+      if (logoGroup.children.length > 0) {
+        logoGroup.rotation.y = Math.sin(t * 0.4) * 0.08;
+      }
+      for (const mat of animatedMaterials) {
+        mat.uniforms.uTime.value = t;
+      }
+    }
+  };
 }
 
