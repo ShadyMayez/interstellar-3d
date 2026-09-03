@@ -227,7 +227,7 @@ const t = clock.getElapsedTime();
   }
 
   if (cardsGroup) {
-    const isScrolledPastHero = (smoothScroll > 0.05);
+    const isScrolledPastHero = (smoothScroll > 0.08);
     cardsGroup.visible = isScrolledPastHero;
 
     const camY = camera.position.y;
@@ -273,16 +273,16 @@ const t = clock.getElapsedTime();
   }
 
   if (spineGroup) {
-    const spineThreshold = 0.04;
+    const spineThreshold = 0.08;
     const isPastHero = (smoothScroll > spineThreshold);
     spineGroup.visible = isPastHero;
 
     if (isPastHero) {
-      const spineProgress = Math.max(0.0, Math.min(1.0, (smoothScroll - spineThreshold) / 0.06));
+      const spineProgress = Math.max(0.0, Math.min(1.0, (smoothScroll - spineThreshold) / 0.05));
       const easeProgress = 1.0 - Math.pow(1.0 - spineProgress, 2.0);
 
       // Smooth vertical rise offset synchronized with first card entrance
-      spineGroup.position.y = (1.0 - easeProgress) * -3.5;
+      spineGroup.position.y = (1.0 - easeProgress) * -3.0;
 
       // Smooth fade in opacity
       const spineOpacity = Math.max(0.0, Math.min(1.0, (smoothScroll - spineThreshold) / 0.03));
