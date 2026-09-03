@@ -237,42 +237,34 @@ cardsGroup.visible = isScrolledPastHero;
 
 const camY = camera.position.y;
 const camZ = camera.position.z;
+const orbitRadius = 2.4;
 
 cardsGroup.children.forEach((cardGroup) => {
 const data = cardGroup.userData;
 const i = data.section;
 
-// Target scroll for card i to be active in front center
+// Target scroll for card i to be active in front center facing us
 const cardTargetScroll = 0.12 + i * 0.18;
 const rel = (smoothScroll - cardTargetScroll) / 0.18;
-const absRel = Math.abs(rel);
 
-let targetX = 0;
-let targetZ = camZ - 2.2;
-let targetScale = 1.0;
-let opacity = 1.0;
+// Top-down cylinder orbit angle theta:
+// rel = 0 (active card): theta = 0 rad -> Front Center facing us (X=0, Z=camZ - 2.2)
+// rel < 0 (incoming card): theta < 0 -> Enters from back-left (-X, deeper -Z) angled outward
+// rel > 0 (outgoing card): theta > 0 -> Recedes to back-right (+X, deeper -Z) angled outward
+const theta = rel * 0.85;
 
-if (rel > 0) {
-// Leaving card (rel > 0): slides out top-left
-targetX = -1.8 * rel + mouse.x * 0.10;
-targetZ = (camZ - 2.2) - 1.2 * rel;
-targetScale = Math.max(0.7, 1.0 - 0.15 * rel);
-opacity = Math.max(0.0, 1.0 - rel * 1.1);
-} else {
-// Incoming card (rel <= 0): emerges from right/behind
-targetX = 1.2 * absRel + mouse.x * 0.10;
-targetZ = (camZ - 2.2) - 0.9 * absRel;
-targetScale = Math.max(0.80, 1.0 - 0.12 * absRel);
-opacity = Math.max(0.0, 1.0 - absRel * 1.0);
-}
-
-// Dynamic 3D Y-axis rotation (rotates facing right when incoming, facing us at center, facing left when outgoing)
-const targetRotY = Math.max(-0.65, Math.min(0.65, rel * 0.65));
-
+const targetX = orbitRadius * Math.sin(theta) + mouse.x * 0.10;
 const targetY = camY + mouse.y * 0.08;
+const targetZ = (camZ - 2.2) - orbitRadius * (1.0 - Math.cos(theta));
+
+// Tangent outward normal rotation matching cylinder perimeter
+const targetRotY = theta;
+
+// Opacity highest when facing us at front-center
+const facingFactor = Math.cos(theta);
+const opacity = Math.max(0.0, Math.min(1.0, (facingFactor - 0.15) / 0.85));
 
 cardGroup.position.set(targetX, targetY, targetZ);
-cardGroup.scale.setScalar(targetScale);
 cardGroup.rotation.y = targetRotY;
 
 cardGroup.children.forEach((child) => {
