@@ -25,32 +25,32 @@ const mouse = { x: 0, y: 0 };
 Camera path keyframes
 ────────────────────────────────────────────── */
 const cameraPath = [
-{ p: 0.00, cam: new THREE.Vector3( 0.3,  4.2,  4.2), target: new THREE.Vector3(0.50,  3.6, -0.5) },
-{ p: 0.25, cam: new THREE.Vector3( 0.1,  2.0,  3.8), target: new THREE.Vector3(0.60,  1.8, -0.6) },
-{ p: 0.50, cam: new THREE.Vector3( 0.4,  0.0,  3.6), target: new THREE.Vector3(0.60,  0.0, -0.6) },
-{ p: 0.75, cam: new THREE.Vector3( 0.2, -2.0,  3.8), target: new THREE.Vector3(0.55, -2.0, -0.6) },
-{ p: 1.00, cam: new THREE.Vector3( 0.3, -4.0,  4.2), target: new THREE.Vector3(0.45, -4.2, -0.6) },
+  { p: 0.00, cam: new THREE.Vector3( 0.3,  3.6,  4.2), target: new THREE.Vector3(0.50,  3.2, -0.5) },
+  { p: 0.25, cam: new THREE.Vector3( 0.1,  0.8,  3.8), target: new THREE.Vector3(0.60,  0.4, -0.6) },
+  { p: 0.50, cam: new THREE.Vector3( 0.4, -2.0,  3.6), target: new THREE.Vector3(0.60, -2.4, -0.6) },
+  { p: 0.75, cam: new THREE.Vector3( 0.2, -4.8,  3.8), target: new THREE.Vector3(0.55, -5.2, -0.6) },
+  { p: 1.00, cam: new THREE.Vector3( 0.3, -7.6,  4.2), target: new THREE.Vector3(0.45, -8.0, -0.6) },
 ];
 
 function lerpPath(progress) {
-const t = Math.max(0, Math.min(1, progress));
+  const t = Math.max(0, Math.min(1, progress));
 
-let a = cameraPath[0], b = cameraPath[cameraPath.length - 1];
-for (let i = 0; i < cameraPath.length - 1; i++) {
-if (t >= cameraPath[i].p && t <= cameraPath[i + 1].p) {
-a = cameraPath[i];
-b = cameraPath[i + 1];
-break;
-}
-}
+  let a = cameraPath[0], b = cameraPath[cameraPath.length - 1];
+  for (let i = 0; i < cameraPath.length - 1; i++) {
+    if (t >= cameraPath[i].p && t <= cameraPath[i + 1].p) {
+      a = cameraPath[i];
+      b = cameraPath[i + 1];
+      break;
+    }
+  }
 
-const segLen = b.p - a.p;
-const f = segLen > 0 ? (t - a.p) / segLen : 0;
+  const segLen = b.p - a.p;
+  const f = segLen > 0 ? (t - a.p) / segLen : 0;
 
-return {
-cam:    new THREE.Vector3().lerpVectors(a.cam, b.cam, f),
-target: new THREE.Vector3().lerpVectors(a.target, b.target, f),
-};
+  return {
+    cam:    new THREE.Vector3().lerpVectors(a.cam, b.cam, f),
+    target: new THREE.Vector3().lerpVectors(a.target, b.target, f),
+  };
 }
 
 /* ──────────────────────────────────────────────
@@ -235,7 +235,6 @@ if (cardsGroup) {
 const isScrolledPastHero = (smoothScroll > 0.05);
 cardsGroup.visible = isScrolledPastHero;
 
-const camY = camera.position.y;
 const camZ = camera.position.z;
 const orbitRadius = 2.4;
 const cardCount = cardsGroup.children.length;
@@ -245,7 +244,7 @@ cardsGroup.children.forEach((cardGroup) => {
 const data = cardGroup.userData;
 const i = data.section;
 
-// Target scroll for card i to be active right in the middle of the screen facing us
+// Target scroll for card i to be active in front center facing us
 const cardTargetScroll = 0.10 + i * scrollStep;
 const rel = (smoothScroll - cardTargetScroll) / scrollStep;
 
@@ -254,8 +253,9 @@ const theta = rel * 0.85;
 
 const targetX = orbitRadius * Math.sin(theta) + mouse.x * 0.10;
 
-// Vertical placement: ALWAYS centered in the middle of the screen (camY) when active
-const targetY = camY + (rel * -0.5) + mouse.y * 0.08;
+// Vertical placement: Cards stacked under each other along distinct section heights Y_i
+const sectionBaseY = 3.2 - i * 1.4;
+const targetY = sectionBaseY + mouse.y * 0.08;
 const targetZ = (camZ - 2.2) - orbitRadius * (1.0 - Math.cos(theta));
 
 // Tangent outward normal rotation
