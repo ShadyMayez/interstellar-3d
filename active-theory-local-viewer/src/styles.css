@@ -22,7 +22,8 @@ html, body {
   min-height: 500vh;
 }
 
-.bg-video {
+.bg-video,
+.bg-img {
   position: fixed;
   top: 0;
   left: 0;
