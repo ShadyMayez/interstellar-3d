@@ -77,57 +77,24 @@ Init
 async function init() {
 const canvas = document.getElementById('three-canvas');
 
-scene = new THREE.Scene();
-scene.background = new THREE.Color('#f8f9fa');
-scene.fog = new THREE.FogExp2('#e9ecef', 0.045);
+  scene = new THREE.Scene();
+  scene.background = null;
+  scene.fog = new THREE.FogExp2('#06020c', 0.025);
 
-camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 80);
-camera.position.set(0.2, 4.2, 7.0);
-camera.layers.enable(1);
+  camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 80);
+  camera.position.set(0.2, 4.2, 7.0);
+  camera.layers.enable(1);
 
-renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.setSize(innerWidth, innerHeight);
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-pmrem.dispose();
-
-// Background plane with radial gradient
-const bgGeom = new THREE.PlaneGeometry(100, 100);
-const bgMat = new THREE.ShaderMaterial({
-depthWrite: false,
-depthTest: true,
-uniforms: {
-uColorSide:   { value: new THREE.Color('#e9ecef') },
-uColorCenter: { value: new THREE.Color('#ffffff') },
-},
-vertexShader: `
-varying vec2 vUv;
-void main() {
-vUv = uv;
-gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}
-`,
-fragmentShader: `
-varying vec2 vUv;
-uniform vec3 uColorSide;
-uniform vec3 uColorCenter;
-void main() {
-float distToCenter = length(vUv - 0.5) * 1.414;
-float t = smoothstep(0.0, 1.0, distToCenter);
-vec3 finalCol = mix(uColorCenter, uColorSide, t);
-gl_FragColor = vec4(finalCol, 1.0);
-}
-`
-});
-bgMesh = new THREE.Mesh(bgGeom, bgMat);
-bgMesh.renderOrder = -100;
-bgMesh.position.set(0.5, 4.2, -15);
-scene.add(bgMesh);
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  pmrem.dispose();
 
 // Lighting
 scene.add(new THREE.AmbientLight(0xffffff, 0.15));
