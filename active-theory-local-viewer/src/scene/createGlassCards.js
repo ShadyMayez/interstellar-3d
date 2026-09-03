@@ -75,6 +75,7 @@ function createCardCanvasTexture(data) {
   ctx.fillText('EXPLORE SECTION  →', 78, 432);
 
   const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
   texture.minFilter = THREE.LinearFilter;
   texture.magFilter = THREE.LinearFilter;
   texture.needsUpdate = true;

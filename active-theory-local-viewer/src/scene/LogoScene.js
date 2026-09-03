@@ -311,6 +311,7 @@ export function createLogoMesh() {
 
   // Load User's Custom Logo Mark Image Texture (/public/images/logo_mark.png)
   textureLoader.load('/images/logo_mark.png', (texture) => {
+    texture.colorSpace = THREE.SRGBColorSpace;
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
 
@@ -318,6 +319,7 @@ export function createLogoMesh() {
     const logoGeom = new THREE.PlaneGeometry(1.8, 1.8);
     const logoMat = new THREE.MeshBasicMaterial({
       map: texture,
+      color: new THREE.Color('#ffffff'),
       transparent: true,
       opacity: 1.0,
       side: THREE.DoubleSide,
@@ -335,10 +337,12 @@ export function createLogoMesh() {
 
   // Load THUSA Image Texture to replace 3D Interstellar text model
   textureLoader.load('/images/THUSA-removebg-preview.png', (texture) => {
+    texture.colorSpace = THREE.SRGBColorSpace;
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
 
-    // Untinted material color (#ffffff) to preserve 100% authentic reference image colors (Deep navy blue + vibrant magenta 'a')
+    // Aspect ratio 3.007 (866x288) -> 4.5 x 1.5 units plane
+    const planeGeom = new THREE.PlaneGeometry(4.5, 1.5);
     const planeMat = new THREE.MeshBasicMaterial({
       map: texture,
       color: new THREE.Color('#ffffff'),
