@@ -307,32 +307,33 @@ export function createLogoMesh() {
   const logoGroup = new THREE.Group();
   const animatedMaterials = [];
 
-  const loader = new GLTFLoader();
+  const textureLoader = new THREE.TextureLoader();
 
-  // Load 3D Swollen Liquid Logo Mark (Pure Copilot3D GLB)
-  loader.load('/models/Copilot3D_clean.glb', (gltf) => {
-    const logoMeshGroup = gltf.scene;
-    logoMeshGroup.scale.setScalar(1.2);
-    logoMeshGroup.position.set(-2.2, 0.0, 0.0);
+  // Load User's Custom Logo Mark Image Texture (/public/images/logo_mark.png)
+  textureLoader.load('/images/logo_mark.png', (texture) => {
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
 
-    logoMeshGroup.traverse((obj) => {
-      if (obj.isMesh) {
-        obj.geometry.computeVertexNormals();
-        obj.geometry.computeBoundingSphere();
-
-        const masterMat = makeMasterLogoMaterial(obj.geometry);
-        obj.material = masterMat;
-        animatedMaterials.push(masterMat);
-      }
+    // 1:1 Aspect ratio square plane (1.8 x 1.8 units)
+    const logoGeom = new THREE.PlaneGeometry(1.8, 1.8);
+    const logoMat = new THREE.MeshBasicMaterial({
+      map: texture,
+      transparent: true,
+      opacity: 1.0,
+      side: THREE.DoubleSide,
+      depthWrite: false
     });
 
-    logoGroup.add(logoMeshGroup);
+    const logoMesh = new THREE.Mesh(logoGeom, logoMat);
+    logoMesh.position.set(-2.2, 0.0, 0.0);
+    logoGroup.add(logoMesh);
+
+    console.log('[LogoScene] Loaded logo_mark.png texture successfully!');
   }, undefined, (err) => {
-    console.error('[LogoScene] Failed to load Copilot3D_clean.glb:', err);
+    console.error('[LogoScene] Failed to load logo_mark.png:', err);
   });
 
   // Load THUSA Image Texture to replace 3D Interstellar text model
-  const textureLoader = new THREE.TextureLoader();
   textureLoader.load('/images/THUSA-removebg-preview.png', (texture) => {
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
