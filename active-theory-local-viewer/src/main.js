@@ -251,8 +251,8 @@ const theta = rel * 0.85;
 
 const targetX = orbitRadius * Math.sin(theta) + mouse.x * 0.10;
 
-// Vertical placement: Cards stacked under each other along distinct section heights
-const sectionBaseY = 3.2 - i * 2.2;
+// Vertical placement: Cards stacked under each other closely along section heights
+const sectionBaseY = 3.2 - i * 1.15;
 const targetY = sectionBaseY + mouse.y * 0.08;
 const targetZ = (camZ - 2.2) - orbitRadius * (1.0 - Math.cos(theta));
 
