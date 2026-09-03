@@ -1,53 +1,80 @@
 import * as THREE from 'three';
 
+function createRoundedCardShape(width, height, radius) {
+  const shape = new THREE.Shape();
+  const x = -width / 2;
+  const y = -height / 2;
+  shape.moveTo(x + radius, y);
+  shape.lineTo(x + width - radius, y);
+  shape.quadraticCurveTo(x + width, y, x + width, y + radius);
+  shape.lineTo(x + width, y + height - radius);
+  shape.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  shape.lineTo(x + radius, y + height);
+  shape.quadraticCurveTo(x, y + height, x, y + height - radius);
+  shape.lineTo(x, y + radius);
+  shape.quadraticCurveTo(x, y, x + radius, y);
+  return shape;
+}
+
 function createCardCanvasTexture(data) {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
   canvas.height = 512;
   const ctx = canvas.getContext('2d');
 
+  // Clip canvas to smooth rounded corners (no box border lines or corner accents!)
+  ctx.beginPath();
+  ctx.roundRect(0, 0, 1024, 512, 48);
+  ctx.clip();
+
   // Glass Tint Background
   const grad = ctx.createLinearGradient(0, 0, 1024, 512);
-  grad.addColorStop(0, 'rgba(18, 8, 40, 0.82)');
-  grad.addColorStop(0.5, 'rgba(75, 12, 125, 0.75)');
-  grad.addColorStop(1, 'rgba(135, 5, 175, 0.82)');
+  grad.addColorStop(0, 'rgba(16, 6, 36, 0.88)');
+  grad.addColorStop(0.5, 'rgba(68, 10, 115, 0.82)');
+  grad.addColorStop(1, 'rgba(125, 4, 160, 0.88)');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 1024, 512);
 
-  // Border outline & glowing glass rim
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
-  ctx.lineWidth = 8;
-  ctx.strokeRect(14, 14, 996, 484);
+  // Top specular reflection highlight
+  const lightGrad = ctx.createLinearGradient(0, 0, 0, 140);
+  lightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.16)');
+  lightGrad.addColorStop(1, 'rgba(255, 255, 255, 0.0)');
+  ctx.fillStyle = lightGrad;
+  ctx.fillRect(0, 0, 1024, 140);
 
-  // Corner Accents
-  ctx.fillStyle = '#d900ff';
-  ctx.fillRect(14, 14, 44, 8);
-  ctx.fillRect(14, 14, 8, 44);
-  ctx.fillRect(966, 464, 44, 8);
-  ctx.fillRect(1002, 428, 8, 44);
+  // Section Index Tag (Cool Space Grotesk font with cyan accent)
+  ctx.fillStyle = '#00f0ff';
+  ctx.font = '700 26px "Space Grotesk", "Outfit", monospace, sans-serif';
+  ctx.fillText(data.indexTag, 56, 76);
 
-  // Section Index Tag
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.80)';
-  ctx.font = '700 28px "NB Architekt Std", monospace, sans-serif';
-  ctx.fillText(data.indexTag, 48, 76);
-
-  // Title
+  // Title (Cool Futuristic Syne font with drop glow shadow)
+  ctx.shadowColor = 'rgba(217, 0, 255, 0.45)';
+  ctx.shadowBlur = 18;
   ctx.fillStyle = '#ffffff';
-  ctx.font = '900 58px "NB Architekt Std", system-ui, sans-serif';
-  ctx.fillText(data.title, 48, 160);
+  ctx.font = '900 68px "Syne", "Space Grotesk", "Outfit", system-ui, sans-serif';
+  ctx.fillText(data.title, 56, 172);
 
   // Subtitle / Description
-  ctx.fillStyle = 'rgba(240, 240, 255, 0.90)';
-  ctx.font = '400 26px "NB Architekt Std", monospace, sans-serif';
-  ctx.fillText(data.description, 48, 230);
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(235, 235, 255, 0.94)';
+  ctx.font = '500 28px "Space Grotesk", "Inter", system-ui, sans-serif';
+  ctx.fillText(data.description, 56, 248);
   if (data.description2) {
-    ctx.fillText(data.description2, 48, 268);
+    ctx.fillText(data.description2, 56, 288);
   }
 
-  // Footer Link CTA
-  ctx.fillStyle = '#00e5ff';
-  ctx.font = '700 28px "NB Architekt Std", monospace, sans-serif';
-  ctx.fillText('EXPLORE SECTION ->', 48, 435);
+  // Footer CTA Link Badge (Cyan glass pill background)
+  ctx.fillStyle = 'rgba(0, 240, 255, 0.12)';
+  ctx.beginPath();
+  ctx.roundRect(56, 396, 310, 54, 27);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0, 240, 255, 0.45)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.fillStyle = '#00f0ff';
+  ctx.font = '700 24px "Space Grotesk", monospace, sans-serif';
+  ctx.fillText('EXPLORE SECTION  →', 78, 432);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.minFilter = THREE.LinearFilter;
@@ -126,28 +153,43 @@ export function createGlassCards() {
   const group = new THREE.Group();
   group.name = 'CardsGroup';
 
+  // Create 3D Extruded Beveled Rounded Geometry (Thickness = 0.08, Radius = 0.12, Bevel = 0.02)
+  const shape = createRoundedCardShape(1.8, 1.0, 0.12);
+  const extrudeSettings = {
+    steps: 1,
+    depth: 0.08,
+    bevelEnabled: true,
+    bevelThickness: 0.02,
+    bevelSize: 0.02,
+    bevelOffset: 0,
+    bevelSegments: 4
+  };
+  const glassGeom = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+  glassGeom.center();
+
   CARD_SECTIONS_DATA.forEach((data) => {
     const cardGroup = new THREE.Group();
     cardGroup.name = `Card_${data.section}`;
 
-    // Flat Rectangular Glass Backing (1.8 x 1.0 units)
-    const glassGeom = new THREE.PlaneGeometry(1.8, 1.0);
+    // Physical Glass Material for 3D Thick Block
     const glassMat = new THREE.MeshPhysicalMaterial({
       color: new THREE.Color('#1a0836'),
-      metalness: 0.15,
-      roughness: 0.10,
-      transmission: 0.80,
-      ior: 1.45,
+      metalness: 0.12,
+      roughness: 0.08,
+      transmission: 0.85,
+      ior: 1.52,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.05,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.88,
       side: THREE.DoubleSide,
       depthWrite: false
     });
     const glassMesh = new THREE.Mesh(glassGeom, glassMat);
     cardGroup.add(glassMesh);
 
-    // Front Text Texture Plane (1.78 x 0.98 units)
-    const textGeom = new THREE.PlaneGeometry(1.78, 0.98);
+    // Front Text Texture Plane (1.76 x 0.96 units)
+    const textGeom = new THREE.PlaneGeometry(1.76, 0.96);
     const textTexture = createCardCanvasTexture(data);
     const textMat = new THREE.MeshBasicMaterial({
       map: textTexture,
@@ -157,7 +199,7 @@ export function createGlassCards() {
       depthWrite: false
     });
     const textMesh = new THREE.Mesh(textGeom, textMat);
-    textMesh.position.z = 0.025;
+    textMesh.position.z = 0.061;
     cardGroup.add(textMesh);
 
     cardGroup.userData = data;
