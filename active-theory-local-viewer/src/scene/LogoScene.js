@@ -341,6 +341,7 @@ export function createLogoMesh() {
     const planeGeom = new THREE.PlaneGeometry(4.5, 1.5);
     const planeMat = new THREE.MeshBasicMaterial({
       map: texture,
+      color: new THREE.Color('#757575'),
       transparent: true,
       opacity: 1.0,
       side: THREE.DoubleSide,
