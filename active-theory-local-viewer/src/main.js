@@ -255,8 +255,8 @@ const theta = rel * 0.85;
 // Exact horizontal center of website when active (X = 0.0)
 const targetX = orbitRadius * Math.sin(theta) + mouse.x * 0.08;
 
-// Exact vertical center of website when active (Y = camY)
-const targetY = camY + (rel * -1.2) + mouse.y * 0.08;
+// Natural scroll flow: Incoming cards enter from bottom (-Y), exit to top (+Y)
+const targetY = camY + (rel * 1.4) + mouse.y * 0.08;
 const targetZ = (camZ - 2.2) - orbitRadius * (1.0 - Math.cos(theta));
 
 // Tangent outward normal rotation (0.0 when active)
