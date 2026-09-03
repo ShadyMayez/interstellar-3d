@@ -285,8 +285,8 @@ if (mesh.material.uniforms.uTime) mesh.material.uniforms.uTime.value = t;
 mesh.material.visible = isScrolledPastHero;
 }
 
-// Shifted spiral twist angle offset (0.35 + idx * 0.95) - Creates dynamic illusion of fast backbone rotation on scroll!
-mesh.rotation.y = 0.35 + idx * 0.95;
+// Fixed stationary spine rotation - ZERO bone movement on scroll!
+mesh.rotation.y = idx * 0.40;
 });
 }
 
