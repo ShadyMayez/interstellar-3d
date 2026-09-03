@@ -153,16 +153,16 @@ export function createGlassCards() {
   const group = new THREE.Group();
   group.name = 'CardsGroup';
 
-  // Create 3D Extruded Beveled Rounded Geometry (Thickness = 0.08, Radius = 0.12, Bevel = 0.02)
+  // Create 3D Extruded Beveled Rounded Geometry (Sleek thin glass plate: Depth = 0.02, Radius = 0.12, Bevel = 0.008)
   const shape = createRoundedCardShape(1.8, 1.0, 0.12);
   const extrudeSettings = {
     steps: 1,
-    depth: 0.08,
+    depth: 0.02,
     bevelEnabled: true,
-    bevelThickness: 0.02,
-    bevelSize: 0.02,
+    bevelThickness: 0.008,
+    bevelSize: 0.008,
     bevelOffset: 0,
-    bevelSegments: 4
+    bevelSegments: 3
   };
   const glassGeom = new THREE.ExtrudeGeometry(shape, extrudeSettings);
   glassGeom.center();
@@ -171,7 +171,7 @@ export function createGlassCards() {
     const cardGroup = new THREE.Group();
     cardGroup.name = `Card_${data.section}`;
 
-    // Physical Glass Material for 3D Thick Block (Matching vibrant purple/magenta color!)
+    // Physical Glass Material for 3D Thin Block (Matching vibrant purple/magenta color!)
     const glassMat = new THREE.MeshPhysicalMaterial({
       color: new THREE.Color('#5a0785'),
       metalness: 0.05,
@@ -199,7 +199,7 @@ export function createGlassCards() {
       depthWrite: false
     });
     const textMesh = new THREE.Mesh(textGeom, textMat);
-    textMesh.position.z = 0.061;
+    textMesh.position.z = 0.019;
     cardGroup.add(textMesh);
 
     cardGroup.userData = data;
