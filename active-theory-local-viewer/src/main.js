@@ -273,29 +273,33 @@ const t = clock.getElapsedTime();
   }
 
   if (spineGroup) {
-    const spineProgress = Math.max(0.0, Math.min(1.0, smoothScroll / 0.15));
-    // Smooth power curve for vertical rising entrance
-    const easeProgress = 1.0 - Math.pow(1.0 - spineProgress, 2.5);
-    
-    // Smooth vertical rise offset from bottom (-5.0 units down to 0.0)
-    spineGroup.position.y = (1.0 - easeProgress) * -5.0;
-    
-    // Smooth fade in opacity
-    const spineOpacity = Math.max(0.0, Math.min(1.0, smoothScroll / 0.06));
-    spineGroup.visible = (spineOpacity > 0.001);
+    const spineThreshold = 0.09;
+    const isPastHero = (smoothScroll > spineThreshold);
+    spineGroup.visible = isPastHero;
 
-    if (spineGroup.children[0]) {
-      spineGroup.children[0].children.forEach((mesh, idx) => {
-        if (mesh.material) {
-          if (mesh.material.uniforms) {
-            if (mesh.material.uniforms.uOpacity) mesh.material.uniforms.uOpacity.value = spineOpacity;
-            if (mesh.material.uniforms.uTime) mesh.material.uniforms.uTime.value = t;
+    if (isPastHero) {
+      const spineProgress = Math.max(0.0, Math.min(1.0, (smoothScroll - spineThreshold) / 0.12));
+      const easeProgress = 1.0 - Math.pow(1.0 - spineProgress, 2.5);
+
+      // Smooth vertical rise offset from bottom (-6.0 units down to 0.0)
+      spineGroup.position.y = (1.0 - easeProgress) * -6.0;
+
+      // Smooth fade in opacity
+      const spineOpacity = Math.max(0.0, Math.min(1.0, (smoothScroll - spineThreshold) / 0.05));
+
+      if (spineGroup.children[0]) {
+        spineGroup.children[0].children.forEach((mesh, idx) => {
+          if (mesh.material) {
+            if (mesh.material.uniforms) {
+              if (mesh.material.uniforms.uOpacity) mesh.material.uniforms.uOpacity.value = spineOpacity;
+              if (mesh.material.uniforms.uTime) mesh.material.uniforms.uTime.value = t;
+            }
+            mesh.material.visible = (spineOpacity > 0.001);
           }
-          mesh.material.visible = (spineOpacity > 0.001);
-        }
 
-        mesh.rotation.y = idx * 0.40;
-      });
+          mesh.rotation.y = idx * 0.40;
+        });
+      }
     }
   }
 
