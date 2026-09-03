@@ -235,7 +235,6 @@ if (cardsGroup) {
 const isScrolledPastHero = (smoothScroll > 0.05);
 cardsGroup.visible = isScrolledPastHero;
 
-const camY = camera.position.y;
 const camZ = camera.position.z;
 const orbitRadius = 2.4;
 
@@ -247,22 +246,22 @@ const i = data.section;
 const cardTargetScroll = 0.12 + i * 0.18;
 const rel = (smoothScroll - cardTargetScroll) / 0.18;
 
-// Top-down cylinder orbit angle theta:
-// rel = 0 (active card): theta = 0 rad -> Front Center facing us (X=0, Z=camZ - 2.2)
-// rel < 0 (incoming card): theta < 0 -> Enters from back-left (-X, deeper -Z) angled outward
-// rel > 0 (outgoing card): theta > 0 -> Recedes to back-right (+X, deeper -Z) angled outward
+// Top-down cylinder orbit angle theta
 const theta = rel * 0.85;
 
 const targetX = orbitRadius * Math.sin(theta) + mouse.x * 0.10;
-const targetY = camY + mouse.y * 0.08;
+
+// Vertical placement: Cards stacked under each other along distinct section heights
+const sectionBaseY = 3.2 - i * 2.2;
+const targetY = sectionBaseY + mouse.y * 0.08;
 const targetZ = (camZ - 2.2) - orbitRadius * (1.0 - Math.cos(theta));
 
-// Tangent outward normal rotation matching cylinder perimeter
+// Tangent outward normal rotation
 const targetRotY = theta;
 
-// Opacity highest when facing us at front-center
+// Opacity highest when facing front center
 const facingFactor = Math.cos(theta);
-const opacity = Math.max(0.0, Math.min(1.0, (facingFactor - 0.15) / 0.85));
+const opacity = Math.max(0.0, Math.min(1.0, (facingFactor - 0.10) / 0.90));
 
 cardGroup.position.set(targetX, targetY, targetZ);
 cardGroup.rotation.y = targetRotY;
