@@ -273,19 +273,19 @@ const t = clock.getElapsedTime();
   }
 
   if (spineGroup) {
-    const spineThreshold = 0.075;
+    const spineThreshold = 0.04;
     const isPastHero = (smoothScroll > spineThreshold);
     spineGroup.visible = isPastHero;
 
     if (isPastHero) {
-      const spineProgress = Math.max(0.0, Math.min(1.0, (smoothScroll - spineThreshold) / 0.08));
-      const easeProgress = 1.0 - Math.pow(1.0 - spineProgress, 2.5);
+      const spineProgress = Math.max(0.0, Math.min(1.0, (smoothScroll - spineThreshold) / 0.06));
+      const easeProgress = 1.0 - Math.pow(1.0 - spineProgress, 2.0);
 
-      // Smooth vertical rise offset starting deep below bottom (-8.0 units down to 0.0)
-      spineGroup.position.y = (1.0 - easeProgress) * -8.0;
+      // Smooth vertical rise offset synchronized with first card entrance
+      spineGroup.position.y = (1.0 - easeProgress) * -3.5;
 
       // Smooth fade in opacity
-      const spineOpacity = Math.max(0.0, Math.min(1.0, (smoothScroll - spineThreshold) / 0.04));
+      const spineOpacity = Math.max(0.0, Math.min(1.0, (smoothScroll - spineThreshold) / 0.03));
 
       if (spineGroup.children[0]) {
         spineGroup.children[0].children.forEach((mesh, idx) => {
