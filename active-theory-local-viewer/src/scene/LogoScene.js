@@ -311,50 +311,64 @@ const loader = new GLTFLoader();
 
 // Load 3D Swollen Liquid Logo Mark (Pure Copilot3D GLB)
 loader.load('/models/Copilot3D_clean.glb', (gltf) => {
-const logoMeshGroup = gltf.scene;
-logoMeshGroup.scale.setScalar(2.6);
-logoMeshGroup.position.set(-2.8, 0.0, 0.0);
+  const logoMeshGroup = gltf.scene;
+  logoMeshGroup.scale.setScalar(1.2);
+  logoMeshGroup.position.set(-2.0, 0.0, 0.0);
 
-logoMeshGroup.traverse((obj) => {
-if (obj.isMesh) {
-obj.geometry.computeVertexNormals();
-obj.geometry.computeBoundingSphere();
+  logoMeshGroup.traverse((obj) => {
+    if (obj.isMesh) {
+      obj.geometry.computeVertexNormals();
+      obj.geometry.computeBoundingSphere();
 
-const masterMat = makeMasterLogoMaterial(obj.geometry);
-obj.material = masterMat;
-animatedMaterials.push(masterMat);
-}
-});
+      const masterMat = makeMasterLogoMaterial(obj.geometry);
+      obj.material = masterMat;
+      animatedMaterials.push(masterMat);
+    }
+  });
 
-logoGroup.add(logoMeshGroup);
+  logoGroup.add(logoMeshGroup);
 }, undefined, (err) => {
-console.error('[LogoScene] Failed to load Copilot3D_clean.glb:', err);
+  console.error('[LogoScene] Failed to load Copilot3D_clean.glb:', err);
 });
 
 // Load 3D Text Mesh (Interstellar with user's custom 3D swollen 'a')
 loader.load('/assets/geometry/interstellar_text.glb', (gltf) => {
-const textScene = gltf.scene;
+  const textScene = gltf.scene;
 
-const bbox = new THREE.Box3().setFromObject(textScene);
-const center = bbox.getCenter(new THREE.Vector3());
+  // Recenter child meshes so Custom_3D_Letter_A (offset high in gltf) aligns with TextMain
+  textScene.traverse((obj) => {
+    if (obj.isMesh) {
+      obj.geometry.computeBoundingBox();
+      const b = obj.geometry.boundingBox;
+      const centerY = (b.min.y + b.max.y) * 0.5;
+      if (centerY > 1.5) {
+        obj.position.y -= centerY;
+      }
+    }
+  });
 
-textScene.scale.setScalar(0.70);
-textScene.position.set(-center.x * 0.70 + 0.60, 0.0, -center.z * 0.70 + 0.0);
+  const bbox = new THREE.Box3().setFromObject(textScene);
+  const center = bbox.getCenter(new THREE.Vector3());
 
-textScene.traverse((obj) => {
-if (obj.isMesh) {
-obj.geometry.computeVertexNormals();
+  // TextMain is 75.7 units wide in local coordinates, scale by 0.045 -> 3.4 units wide
+  const textScale = 0.045;
+  textScene.scale.setScalar(textScale);
+  textScene.position.set(-center.x * textScale + 0.40, -center.y * textScale, -center.z * textScale);
 
-const textMat = makeMasterTextMaterial(obj.geometry);
-obj.material = textMat;
-animatedMaterials.push(textMat);
-}
-});
+  textScene.traverse((obj) => {
+    if (obj.isMesh) {
+      obj.geometry.computeVertexNormals();
 
-logoGroup.add(textScene);
-console.log('[LogoScene] Loaded interstellar_text.glb successfully');
+      const textMat = makeMasterTextMaterial(obj.geometry);
+      obj.material = textMat;
+      animatedMaterials.push(textMat);
+    }
+  });
+
+  logoGroup.add(textScene);
+  console.log('[LogoScene] Loaded interstellar_text.glb successfully');
 }, undefined, (err) => {
-console.error('[LogoScene] Failed to load interstellar_text.glb:', err);
+  console.error('[LogoScene] Failed to load interstellar_text.glb:', err);
 });
 
 return {

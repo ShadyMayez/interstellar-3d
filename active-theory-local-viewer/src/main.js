@@ -25,11 +25,11 @@ const mouse = { x: 0, y: 0 };
 Camera path keyframes
 ────────────────────────────────────────────── */
 const cameraPath = [
-{ p: 0.00, cam: new THREE.Vector3( 0.3,  4.2,  4.5), target: new THREE.Vector3(0.50,  3.6, -0.5) },
-{ p: 0.25, cam: new THREE.Vector3( 0.1,  2.0,  4.0), target: new THREE.Vector3(0.60,  1.8, -0.6) },
-{ p: 0.50, cam: new THREE.Vector3( 0.4,  0.0,  3.7), target: new THREE.Vector3(0.60,  0.0, -0.6) },
-{ p: 0.75, cam: new THREE.Vector3( 0.2, -2.0,  4.0), target: new THREE.Vector3(0.55, -2.0, -0.6) },
-{ p: 1.00, cam: new THREE.Vector3( 0.3, -4.0,  4.5), target: new THREE.Vector3(0.45, -4.2, -0.6) },
+{ p: 0.00, cam: new THREE.Vector3( 0.3,  4.2,  4.2), target: new THREE.Vector3(0.50,  3.6, -0.5) },
+{ p: 0.25, cam: new THREE.Vector3( 0.1,  2.0,  3.8), target: new THREE.Vector3(0.60,  1.8, -0.6) },
+{ p: 0.50, cam: new THREE.Vector3( 0.4,  0.0,  3.6), target: new THREE.Vector3(0.60,  0.0, -0.6) },
+{ p: 0.75, cam: new THREE.Vector3( 0.2, -2.0,  3.8), target: new THREE.Vector3(0.55, -2.0, -0.6) },
+{ p: 1.00, cam: new THREE.Vector3( 0.3, -4.0,  4.2), target: new THREE.Vector3(0.45, -4.2, -0.6) },
 ];
 
 function lerpPath(progress) {
@@ -167,6 +167,7 @@ spineGroup = await loadSpineMesh(dracoInstance);
 scene.add(spineGroup);
 
 particleGroup = await createParticles(dracoInstance);
+scene.add(particleGroup);
 
 postprocessing = setupPostprocessing(renderer, scene, camera);
 
@@ -211,15 +212,15 @@ bgMesh.position.y = camera.position.y;
 if (logoGroup && logoObj) {
 logoObj.update(t);
 
-const logoT = Math.min(1.0, smoothScroll / 0.25);
+const logoT = Math.min(1.0, smoothScroll / 0.20);
 
 logoGroup.position.set(
 0.12 + mouse.x * 0.14,
-3.6 + logoT * 5.0 + mouse.y * 0.10,
+3.6 + logoT * 6.0 + mouse.y * 0.10,
 -0.5
 );
 
-logoGroup.scale.setScalar(0.20 * (1.0 - logoT * 0.45));
+logoGroup.scale.setScalar(0.75 * (1.0 - logoT * 0.45));
 
 logoGroup.rotation.y = 0.05 + mouse.x * 0.15;
 logoGroup.rotation.x = -0.12 - mouse.y * 0.08;
@@ -228,14 +229,18 @@ logoGroup.visible = (logoT < 0.99);
 }
 
 if (spineGroup) {
-const spineFade = Math.max(0.0, Math.min(1.0, smoothScroll / 0.10));
+const isScrolledPastHero = (smoothScroll > 0.05);
+spineGroup.visible = isScrolledPastHero;
+
 spineGroup.children.forEach((mesh, idx) => {
-if (mesh.material && mesh.material.uniforms) {
-mesh.material.uniforms.uOpacity.value = spineFade * 0.95;
-mesh.material.uniforms.uTime.value = t;
-mesh.material.visible = (spineFade > 0.01);
-mesh.rotation.y = idx * 0.35 + t * 0.30 + smoothScroll * Math.PI * 2.0;
+if (mesh.material) {
+if (mesh.material.uniforms) {
+if (mesh.material.uniforms.uOpacity) mesh.material.uniforms.uOpacity.value = 1.0;
+if (mesh.material.uniforms.uTime) mesh.material.uniforms.uTime.value = t;
 }
+mesh.material.visible = isScrolledPastHero;
+}
+mesh.rotation.y = idx * 0.35;
 });
 }
 

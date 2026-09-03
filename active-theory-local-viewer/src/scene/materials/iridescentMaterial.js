@@ -2,16 +2,16 @@ import * as THREE from 'three';
 
 export function createIridescentMaterial() {
   const mat = new THREE.ShaderMaterial({
-    transparent: true,
+    transparent: false,
     depthWrite: true,
     depthTest: true,
     side: THREE.DoubleSide,
     uniforms: {
       uTime:     { value: 0 },
       uOpacity:  { value: 1.0 },
-      uColor1:   { value: new THREE.Color('#2e1264') },
-      uColor2:   { value: new THREE.Color('#9b07c3') },
-      uColor3:   { value: new THREE.Color('#c103e5') },
+      uColor1:   { value: new THREE.Color('#12052b') }, // Dark Obsidian Indigo
+      uColor2:   { value: new THREE.Color('#4a0770') }, // Dark Midnight Violet
+      uColor3:   { value: new THREE.Color('#73029e') }, // Rich Deep Purple
     },
     vertexShader: /* glsl */`
       varying vec3 vWorldNormal;
@@ -44,19 +44,37 @@ export function createIridescentMaterial() {
         vec3 N = normalize(vWorldNormal);
         vec3 V = normalize(vViewPosition);
         float NdotV = abs(dot(N, V));
-        float fresnel = pow(1.0 - NdotV, 2.5);
+
+        // Glass Fresnel Edge Rim
+        float fresnel = pow(1.0 - NdotV, 3.5);
 
         float t = sin(uTime * 0.8 + vWorldPos.y * 0.5 + vUv.x * 4.0) * 0.5 + 0.5;
         vec3 baseColor = mix(uColor1, uColor2, t);
-        baseColor = mix(baseColor, uColor3, fresnel);
+        baseColor = mix(baseColor, uColor3, fresnel * 0.7);
 
-        // Metallic studio light
-        vec3 L = normalize(vec3(-0.4, 0.8, 0.6));
-        float diff = max(dot(N, L), 0.0) * 0.7 + 0.3;
+        // Dark Studio Lighting
+        vec3 L = normalize(vec3(-0.4, 0.85, 0.75));
+        vec3 Lfill = normalize(vec3(0.6, -0.3, 0.5));
+        float diffKey = max(dot(N, L), 0.0) * 0.50;
+        float diffFill = max(dot(N, Lfill), 0.0) * 0.20;
+        float studioLight = diffKey + diffFill + 0.25;
+        vec3 shadedColor = baseColor * studioLight;
+
+        // High-Gloss Glassy Specular Shine (Sharp Clearcoat + Broad Sheen)
         vec3 H = normalize(L + V);
-        float spec = pow(max(dot(N, H), 0.0), 90.0) * 1.5;
+        float specSharp = pow(max(dot(N, H), 0.0), 180.0);
+        float specBroad = pow(max(dot(N, H), 0.0), 28.0);
+        vec3 specGlint = vec3(0.95, 0.90, 1.0) * specSharp * 2.2 + vec3(0.65, 0.35, 0.90) * specBroad * 0.45;
 
-        vec3 finalCol = baseColor * diff + vec3(0.8, 0.4, 1.0) * spec + vec3(0.5, 0.1, 0.8) * fresnel;
+        // Studio Glass Environment Reflection
+        vec3 R = reflect(-V, N);
+        float studioRefl = pow(max(dot(R, normalize(vec3(-0.35, 0.75, 0.55))), 0.0), 14.0);
+        vec3 glassRefl = vec3(0.90, 0.85, 1.0) * studioRefl * 0.65;
+
+        // Glass Rim Highlight
+        vec3 glassRim = vec3(0.85, 0.65, 1.0) * fresnel * 0.70;
+
+        vec3 finalCol = shadedColor + specGlint + glassRefl + glassRim;
 
         gl_FragColor = vec4(clamp(finalCol, 0.0, 1.0), uOpacity);
       }
