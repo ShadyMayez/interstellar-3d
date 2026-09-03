@@ -25,11 +25,11 @@ const mouse = { x: 0, y: 0 };
 Camera path keyframes
 ────────────────────────────────────────────── */
 const cameraPath = [
-  { p: 0.00, cam: new THREE.Vector3( 0.3,  3.6,  4.2), target: new THREE.Vector3(0.50,  3.2, -0.5) },
-  { p: 0.25, cam: new THREE.Vector3( 0.1,  0.8,  3.8), target: new THREE.Vector3(0.60,  0.4, -0.6) },
-  { p: 0.50, cam: new THREE.Vector3( 0.4, -2.0,  3.6), target: new THREE.Vector3(0.60, -2.4, -0.6) },
-  { p: 0.75, cam: new THREE.Vector3( 0.2, -4.8,  3.8), target: new THREE.Vector3(0.55, -5.2, -0.6) },
-  { p: 1.00, cam: new THREE.Vector3( 0.3, -7.6,  4.2), target: new THREE.Vector3(0.45, -8.0, -0.6) },
+  { p: 0.00, cam: new THREE.Vector3(0.0,  3.6,  4.2), target: new THREE.Vector3(0.0,  3.6, -0.5) },
+  { p: 0.25, cam: new THREE.Vector3(0.0,  0.8,  3.8), target: new THREE.Vector3(0.0,  0.8, -0.6) },
+  { p: 0.50, cam: new THREE.Vector3(0.0, -2.0,  3.6), target: new THREE.Vector3(0.0, -2.0, -0.6) },
+  { p: 0.75, cam: new THREE.Vector3(0.0, -4.8,  3.8), target: new THREE.Vector3(0.0, -4.8, -0.6) },
+  { p: 1.00, cam: new THREE.Vector3(0.0, -7.6,  4.2), target: new THREE.Vector3(0.0, -7.6, -0.6) },
 ];
 
 function lerpPath(progress) {
@@ -235,6 +235,7 @@ if (cardsGroup) {
 const isScrolledPastHero = (smoothScroll > 0.05);
 cardsGroup.visible = isScrolledPastHero;
 
+const camY = camera.position.y;
 const camZ = camera.position.z;
 const orbitRadius = 2.4;
 const cardCount = cardsGroup.children.length;
@@ -244,21 +245,21 @@ cardsGroup.children.forEach((cardGroup) => {
 const data = cardGroup.userData;
 const i = data.section;
 
-// Target scroll for card i to be active in front center facing us
+// Target scroll for card i to be active in the exact center of the website
 const cardTargetScroll = 0.10 + i * scrollStep;
 const rel = (smoothScroll - cardTargetScroll) / scrollStep;
 
-// Top-down cylinder orbit angle theta
+// Top-down cylinder orbit angle theta (0.0 when active)
 const theta = rel * 0.85;
 
-const targetX = orbitRadius * Math.sin(theta) + mouse.x * 0.10;
+// Exact horizontal center of website when active (X = 0.0)
+const targetX = orbitRadius * Math.sin(theta) + mouse.x * 0.08;
 
-// Vertical placement: Cards stacked under each other along distinct section heights Y_i
-const sectionBaseY = 3.2 - i * 1.4;
-const targetY = sectionBaseY + mouse.y * 0.08;
+// Exact vertical center of website when active (Y = camY)
+const targetY = camY + (rel * -1.2) + mouse.y * 0.08;
 const targetZ = (camZ - 2.2) - orbitRadius * (1.0 - Math.cos(theta));
 
-// Tangent outward normal rotation
+// Tangent outward normal rotation (0.0 when active)
 const targetRotY = theta;
 
 // Opacity highest when facing front center
