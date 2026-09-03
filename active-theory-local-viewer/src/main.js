@@ -244,14 +244,14 @@ const t = clock.getElapsedTime();
       const cardTargetScroll = 0.10 + i * scrollStep;
       const rel = (smoothScroll - cardTargetScroll) / scrollStep;
 
-      // Smooth cylinder orbit angle theta (spaced far apart)
-      const theta = rel * 1.0;
+      // Smooth cylinder orbit angle theta (sweet spot spacing)
+      const theta = rel * 0.82;
 
       // Exact horizontal center of website when active (X = 0.0)
       const targetX = orbitRadius * Math.sin(theta);
 
-      // Spaced far apart vertically (2.2 units) so adjacent cards never overlap or clip!
-      const targetY = camY + (rel * 2.2);
+      // Sweet spot vertical spacing (1.6 units) - Cards stay close without overlapping!
+      const targetY = camY + (rel * 1.6);
       const targetZ = (camZ - 2.2) - orbitRadius * (1.0 - Math.cos(theta));
 
       // Tangent outward normal rotation (0.0 when active)
