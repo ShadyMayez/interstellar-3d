@@ -82,19 +82,19 @@ export async function loadSpineMesh(dracoInstance) {
 
         geom.computeVertexNormals();
 
-        // 2. Build 40 continuous stacked instances of the authentic 3D backbone spine mesh
-        const numSegments = 40;
+        // 2. Build 65 continuous stacked instances of the authentic 3D backbone spine mesh
+        const numSegments = 65;
         for (let i = 0; i < numSegments; i++) {
           const mat = createIridescentMaterial();
           const segmentMesh = new THREE.Mesh(geom, mat);
           segmentMesh.scale.set(2.3, 2.3, 2.3);
-          const yPos = 4.0 - i * 0.42; // Spans vertically from +4.0 down to -12.4
+          const yPos = 8.5 - i * 0.42; // Spans vertically from +8.5 down to -18.38
           segmentMesh.position.set(0.0, yPos, -0.6);
           segmentMesh.rotation.y = i * 0.40;
           group.add(segmentMesh);
         }
 
-        console.log(`[SpineScene] Loaded authentic 3D spine mesh (40 segments, ${numFaces} faces each) successfully`);
+        console.log(`[SpineScene] Loaded authentic 3D spine mesh (65 segments, ${numFaces} faces each) successfully`);
       }
 
       dracoInstance.destroy(mesh);
