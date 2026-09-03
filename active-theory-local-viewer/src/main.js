@@ -242,29 +242,38 @@ cardsGroup.children.forEach((cardGroup) => {
 const data = cardGroup.userData;
 const i = data.section;
 
-// Target scroll for card i to be at front center facing us
+// Target scroll for card i to be active in the front center
 const cardTargetScroll = 0.12 + i * 0.18;
 const rel = (smoothScroll - cardTargetScroll) / 0.18;
 
-// Depth orbit motion:
-// rel = 0 (active section): centered in the middle of the screen facing us (X=0, Z=camZ - 2.2)
-// rel > 0 (scrolling down past card): card recedes to the back (+X, deeper Z)
-// rel < 0 (scrolling towards card): card comes forward from the back (-X, deeper Z -> front Z)
-const absRel = Math.abs(rel);
-const dir = rel >= 0 ? 1.0 : -1.0;
+let targetX = 0;
+let targetZ = camZ - 2.2;
+let targetScale = 1.0;
+let opacity = 1.0;
+let targetRotY = 0;
 
-const targetX = dir * 1.8 * Math.sin(absRel * 1.2) + mouse.x * 0.10;
+if (rel > 0) {
+// Leaving card (rel > 0): slides out top-left
+targetX = -1.8 * rel + mouse.x * 0.10;
+targetZ = (camZ - 2.2) - 1.2 * rel;
+targetScale = Math.max(0.7, 1.0 - 0.15 * rel);
+targetRotY = rel * 0.35;
+opacity = Math.max(0.0, 1.0 - rel * 1.1);
+} else {
+// Incoming card (rel <= 0): emerges directly out from behind the active card deck!
+const absRel = Math.abs(rel);
+targetX = 0.15 * absRel + mouse.x * 0.10;
+targetZ = (camZ - 2.2) - 0.8 * absRel;
+targetScale = Math.max(0.85, 1.0 - 0.12 * absRel);
+targetRotY = -0.15 * absRel;
+opacity = Math.max(0.0, 1.0 - absRel * 1.0);
+}
+
 const targetY = camY + mouse.y * 0.08;
-const targetZ = camZ - 2.2 - 2.2 * absRel;
 
 cardGroup.position.set(targetX, targetY, targetZ);
-
-// Rotation Y: 0.0 when centered facing us, angling as it recedes into depth
-const targetRotY = Math.max(-0.65, Math.min(0.65, rel * 0.70));
+cardGroup.scale.setScalar(targetScale);
 cardGroup.rotation.y = targetRotY;
-
-// Opacity: 1.0 when centered, fading out as it recedes into the back
-const opacity = Math.max(0.0, 1.0 - absRel * 1.1);
 
 cardGroup.children.forEach((child) => {
 if (child.material) {

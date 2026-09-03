@@ -1,18 +1,5 @@
 import * as THREE from 'three';
 
-function createCurvyPlaneGeometry(width, height, segmentsX, segmentsY, curveAmount) {
-  const geom = new THREE.PlaneGeometry(width, height, segmentsX, segmentsY);
-  const pos = geom.attributes.position;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i);
-    const normX = x / (width * 0.5);
-    const zCurve = -Math.pow(normX, 2) * curveAmount;
-    pos.setZ(i, zCurve);
-  }
-  geom.computeVertexNormals();
-  return geom;
-}
-
 function createCardCanvasTexture(data) {
   const canvas = document.createElement('canvas');
   canvas.width = 1024;
@@ -21,14 +8,14 @@ function createCardCanvasTexture(data) {
 
   // Glass Tint Background
   const grad = ctx.createLinearGradient(0, 0, 1024, 512);
-  grad.addColorStop(0, 'rgba(18, 8, 40, 0.78)');
-  grad.addColorStop(0.5, 'rgba(75, 12, 125, 0.70)');
-  grad.addColorStop(1, 'rgba(135, 5, 175, 0.78)');
+  grad.addColorStop(0, 'rgba(18, 8, 40, 0.82)');
+  grad.addColorStop(0.5, 'rgba(75, 12, 125, 0.75)');
+  grad.addColorStop(1, 'rgba(135, 5, 175, 0.82)');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 1024, 512);
 
   // Border outline & glowing glass rim
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.60)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
   ctx.lineWidth = 8;
   ctx.strokeRect(14, 14, 996, 484);
 
@@ -115,8 +102,8 @@ export function createGlassCards() {
     const cardGroup = new THREE.Group();
     cardGroup.name = `Card_${data.section}`;
 
-    // Compact Curvy Glass Backing (1.8 x 1.0 units)
-    const glassGeom = createCurvyPlaneGeometry(1.8, 1.0, 24, 24, 0.18);
+    // Flat Rectangular Glass Backing (1.8 x 1.0 units)
+    const glassGeom = new THREE.PlaneGeometry(1.8, 1.0);
     const glassMat = new THREE.MeshPhysicalMaterial({
       color: new THREE.Color('#1a0836'),
       metalness: 0.15,
@@ -132,7 +119,7 @@ export function createGlassCards() {
     cardGroup.add(glassMesh);
 
     // Front Text Texture Plane (1.78 x 0.98 units)
-    const textGeom = createCurvyPlaneGeometry(1.78, 0.98, 24, 24, 0.18);
+    const textGeom = new THREE.PlaneGeometry(1.78, 0.98);
     const textTexture = createCardCanvasTexture(data);
     const textMat = new THREE.MeshBasicMaterial({
       map: textTexture,
