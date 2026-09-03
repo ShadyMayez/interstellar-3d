@@ -90,7 +90,7 @@ export async function loadSpineMesh(dracoInstance) {
           segmentMesh.scale.set(2.3, 2.3, 2.3);
           const yPos = 4.0 - i * 0.42; // Spans vertically from +4.0 down to -12.4
           segmentMesh.position.set(0.0, yPos, -0.6);
-          segmentMesh.rotation.y = i * 0.40;
+          segmentMesh.rotation.y = 0.35 + i * 0.95;
           group.add(segmentMesh);
         }
 
