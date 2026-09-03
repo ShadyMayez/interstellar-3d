@@ -339,9 +339,10 @@ export function createLogoMesh() {
 
     // Aspect ratio 3.007 (866x288) -> 4.5 x 1.5 units plane
     const planeGeom = new THREE.PlaneGeometry(4.5, 1.5);
+    // Tint THUSA texture towards user's target hex #431769 (Rich deep royal purple)
     const planeMat = new THREE.MeshBasicMaterial({
       map: texture,
-      color: new THREE.Color('#757575'),
+      color: new THREE.Color('#642a8f'),
       transparent: true,
       opacity: 1.0,
       side: THREE.DoubleSide,
