@@ -315,8 +315,8 @@ export function createLogoMesh() {
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
 
-    // Aspect ratio 1.1976 (1382x1154 tight cropped) -> 2.874 x 2.40 units plane
-    const logoGeom = new THREE.PlaneGeometry(2.874, 2.40);
+    // Aspect ratio 1.1976 (1382x1154 tight cropped) -> 2.40 x 2.00 units plane
+    const logoGeom = new THREE.PlaneGeometry(2.40, 2.00);
     const logoMat = new THREE.MeshBasicMaterial({
       map: texture,
       color: new THREE.Color('#ffffff'),
@@ -327,7 +327,7 @@ export function createLogoMesh() {
     });
 
     const logoMesh = new THREE.Mesh(logoGeom, logoMat);
-    logoMesh.position.set(-2.25, 0.05, 0.0);
+    logoMesh.position.set(-1.80, 0.10, 0.0);
     logoGroup.add(logoMesh);
 
     console.log('[LogoScene] Loaded logo_mark.png texture successfully!');
@@ -341,8 +341,8 @@ export function createLogoMesh() {
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
 
-    // Aspect ratio 3.004 (850x283 tight cropped) -> 4.5 x 1.50 units plane
-    const planeGeom = new THREE.PlaneGeometry(4.5, 1.50);
+    // Aspect ratio 3.004 (850x283 tight cropped) -> 3.00 x 1.00 units plane (smaller)
+    const planeGeom = new THREE.PlaneGeometry(3.00, 1.00);
     const planeMat = new THREE.MeshBasicMaterial({
       map: texture,
       color: new THREE.Color('#ffffff'),
@@ -353,7 +353,7 @@ export function createLogoMesh() {
     });
 
     const thusaMesh = new THREE.Mesh(planeGeom, planeMat);
-    thusaMesh.position.set(0.70, 0.22, 0.0);
+    thusaMesh.position.set(1.25, -0.20, 0.0);
     logoGroup.add(thusaMesh);
 
     console.log('[LogoScene] Loaded THUSA-removebg-preview.png texture successfully!');
@@ -367,8 +367,8 @@ export function createLogoMesh() {
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
 
-    // Aspect ratio 11.093 (599x54 tight cropped) -> 3.6 x 0.325 units plane
-    const subGeom = new THREE.PlaneGeometry(3.6, 0.325);
+    // Aspect ratio 11.093 (599x54 tight cropped) -> 2.40 x 0.216 units plane (smaller)
+    const subGeom = new THREE.PlaneGeometry(2.40, 0.216);
     const subMat = new THREE.MeshBasicMaterial({
       map: texture,
       color: new THREE.Color('#ffffff'),
@@ -379,7 +379,7 @@ export function createLogoMesh() {
     });
 
     const subMesh = new THREE.Mesh(subGeom, subMat);
-    subMesh.position.set(0.70, -0.42, 0.0);
+    subMesh.position.set(0.95, -0.65, 0.0);
     logoGroup.add(subMesh);
 
     console.log('[LogoScene] Loaded subtitle_text.png texture successfully!');
