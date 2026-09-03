@@ -242,32 +242,32 @@ cardsGroup.children.forEach((cardGroup) => {
 const data = cardGroup.userData;
 const i = data.section;
 
-// Target scroll for card i to be active in the front center
+// Target scroll for card i to be active in front center
 const cardTargetScroll = 0.12 + i * 0.18;
 const rel = (smoothScroll - cardTargetScroll) / 0.18;
+const absRel = Math.abs(rel);
 
 let targetX = 0;
 let targetZ = camZ - 2.2;
 let targetScale = 1.0;
 let opacity = 1.0;
-let targetRotY = 0;
 
 if (rel > 0) {
 // Leaving card (rel > 0): slides out top-left
 targetX = -1.8 * rel + mouse.x * 0.10;
 targetZ = (camZ - 2.2) - 1.2 * rel;
 targetScale = Math.max(0.7, 1.0 - 0.15 * rel);
-targetRotY = rel * 0.35;
 opacity = Math.max(0.0, 1.0 - rel * 1.1);
 } else {
-// Incoming card (rel <= 0): emerges directly out from behind the active card deck!
-const absRel = Math.abs(rel);
-targetX = 0.15 * absRel + mouse.x * 0.10;
-targetZ = (camZ - 2.2) - 0.8 * absRel;
-targetScale = Math.max(0.85, 1.0 - 0.12 * absRel);
-targetRotY = -0.15 * absRel;
+// Incoming card (rel <= 0): emerges from right/behind
+targetX = 1.2 * absRel + mouse.x * 0.10;
+targetZ = (camZ - 2.2) - 0.9 * absRel;
+targetScale = Math.max(0.80, 1.0 - 0.12 * absRel);
 opacity = Math.max(0.0, 1.0 - absRel * 1.0);
 }
+
+// Dynamic 3D Y-axis rotation (rotates facing right when incoming, facing us at center, facing left when outgoing)
+const targetRotY = Math.max(-0.65, Math.min(0.65, rel * 0.65));
 
 const targetY = camY + mouse.y * 0.08;
 
