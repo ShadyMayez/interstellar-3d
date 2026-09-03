@@ -21,46 +21,46 @@ function createCardCanvasTexture(data) {
 
   // Glass Tint Background
   const grad = ctx.createLinearGradient(0, 0, 1024, 512);
-  grad.addColorStop(0, 'rgba(15, 6, 35, 0.75)');
-  grad.addColorStop(0.5, 'rgba(65, 10, 110, 0.65)');
-  grad.addColorStop(1, 'rgba(120, 5, 160, 0.75)');
+  grad.addColorStop(0, 'rgba(18, 8, 40, 0.78)');
+  grad.addColorStop(0.5, 'rgba(75, 12, 125, 0.70)');
+  grad.addColorStop(1, 'rgba(135, 5, 175, 0.78)');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 1024, 512);
 
   // Border outline & glowing glass rim
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.60)';
   ctx.lineWidth = 8;
   ctx.strokeRect(14, 14, 996, 484);
 
   // Corner Accents
   ctx.fillStyle = '#d900ff';
-  ctx.fillRect(14, 14, 48, 8);
-  ctx.fillRect(14, 14, 8, 48);
-  ctx.fillRect(962, 462, 48, 8);
-  ctx.fillRect(1002, 422, 8, 48);
+  ctx.fillRect(14, 14, 44, 8);
+  ctx.fillRect(14, 14, 8, 44);
+  ctx.fillRect(966, 464, 44, 8);
+  ctx.fillRect(1002, 428, 8, 44);
 
   // Section Index Tag
   ctx.fillStyle = 'rgba(255, 255, 255, 0.80)';
-  ctx.font = '700 32px "NB Architekt Std", monospace, sans-serif';
-  ctx.fillText(data.indexTag, 52, 82);
+  ctx.font = '700 28px "NB Architekt Std", monospace, sans-serif';
+  ctx.fillText(data.indexTag, 48, 76);
 
   // Title
   ctx.fillStyle = '#ffffff';
-  ctx.font = '900 68px "NB Architekt Std", system-ui, sans-serif';
-  ctx.fillText(data.title, 52, 175);
+  ctx.font = '900 58px "NB Architekt Std", system-ui, sans-serif';
+  ctx.fillText(data.title, 48, 160);
 
   // Subtitle / Description
   ctx.fillStyle = 'rgba(240, 240, 255, 0.90)';
-  ctx.font = '400 30px "NB Architekt Std", monospace, sans-serif';
-  ctx.fillText(data.description, 52, 250);
+  ctx.font = '400 26px "NB Architekt Std", monospace, sans-serif';
+  ctx.fillText(data.description, 48, 230);
   if (data.description2) {
-    ctx.fillText(data.description2, 52, 292);
+    ctx.fillText(data.description2, 48, 268);
   }
 
   // Footer Link CTA
   ctx.fillStyle = '#00e5ff';
-  ctx.font = '700 32px "NB Architekt Std", monospace, sans-serif';
-  ctx.fillText('EXPLORE SECTION ->', 52, 435);
+  ctx.font = '700 28px "NB Architekt Std", monospace, sans-serif';
+  ctx.fillText('EXPLORE SECTION ->', 48, 435);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.minFilter = THREE.LinearFilter;
@@ -115,8 +115,8 @@ export function createGlassCards() {
     const cardGroup = new THREE.Group();
     cardGroup.name = `Card_${data.section}`;
 
-    // Curvy Glass Backing (2.6 x 1.4 units)
-    const glassGeom = createCurvyPlaneGeometry(2.6, 1.4, 24, 24, 0.25);
+    // Compact Curvy Glass Backing (1.8 x 1.0 units)
+    const glassGeom = createCurvyPlaneGeometry(1.8, 1.0, 24, 24, 0.18);
     const glassMat = new THREE.MeshPhysicalMaterial({
       color: new THREE.Color('#1a0836'),
       metalness: 0.15,
@@ -131,8 +131,8 @@ export function createGlassCards() {
     const glassMesh = new THREE.Mesh(glassGeom, glassMat);
     cardGroup.add(glassMesh);
 
-    // Front Text Texture Plane
-    const textGeom = createCurvyPlaneGeometry(2.58, 1.38, 24, 24, 0.25);
+    // Front Text Texture Plane (1.78 x 0.98 units)
+    const textGeom = createCurvyPlaneGeometry(1.78, 0.98, 24, 24, 0.18);
     const textTexture = createCardCanvasTexture(data);
     const textMat = new THREE.MeshBasicMaterial({
       map: textTexture,
@@ -142,7 +142,7 @@ export function createGlassCards() {
       depthWrite: false
     });
     const textMesh = new THREE.Mesh(textGeom, textMat);
-    textMesh.position.z = 0.03;
+    textMesh.position.z = 0.025;
     cardGroup.add(textMesh);
 
     cardGroup.userData = data;

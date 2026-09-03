@@ -237,7 +237,6 @@ cardsGroup.visible = isScrolledPastHero;
 
 const camY = camera.position.y;
 const camZ = camera.position.z;
-const orbitRadius = 2.6;
 
 cardsGroup.children.forEach((cardGroup) => {
 const data = cardGroup.userData;
@@ -245,29 +244,27 @@ const i = data.section;
 
 // Target scroll for card i to be at front center facing us
 const cardTargetScroll = 0.12 + i * 0.18;
-const scrollRel = (smoothScroll - cardTargetScroll) / 0.18;
+const rel = (smoothScroll - cardTargetScroll) / 0.18;
 
-// Orbital angle around the central Y-axis (backbone column)
-// When scrollRel = 0: theta = 0 (front center facing us)
-// When scrollRel < 0: theta < 0 (orbiting on the left side)
-// When scrollRel > 0: theta > 0 (orbiting to the right side)
-const theta = scrollRel * 0.90;
+// Depth orbit motion:
+// rel = 0 (active section): centered in the middle of the screen facing us (X=0, Z=camZ - 2.2)
+// rel > 0 (scrolling down past card): card recedes to the back (+X, deeper Z)
+// rel < 0 (scrolling towards card): card comes forward from the back (-X, deeper Z -> front Z)
+const absRel = Math.abs(rel);
+const dir = rel >= 0 ? 1.0 : -1.0;
 
-const x = orbitRadius * Math.sin(theta) + mouse.x * 0.10;
-const z = (camZ - 2.4) + (orbitRadius * (Math.cos(theta) - 1.0));
+const targetX = dir * 1.8 * Math.sin(absRel * 1.2) + mouse.x * 0.10;
+const targetY = camY + mouse.y * 0.08;
+const targetZ = camZ - 2.2 - 2.2 * absRel;
 
-// Vertical Y position aligned with section height
-const sectionBaseY = 3.0 - i * 2.0;
-const targetY = sectionBaseY + (camY - 3.6) + mouse.y * 0.08;
+cardGroup.position.set(targetX, targetY, targetZ);
 
-cardGroup.position.set(x, targetY, z);
+// Rotation Y: 0.0 when centered facing us, angling as it recedes into depth
+const targetRotY = Math.max(-0.65, Math.min(0.65, rel * 0.70));
+cardGroup.rotation.y = targetRotY;
 
-// Natural outward facing rotation along cylinder radius
-cardGroup.rotation.y = theta;
-
-// Opacity highest when facing front center
-const facingUs = Math.cos(theta);
-const opacity = Math.max(0.0, Math.min(1.0, (facingUs - 0.2) / 0.8));
+// Opacity: 1.0 when centered, fading out as it recedes into the back
+const opacity = Math.max(0.0, 1.0 - absRel * 1.1);
 
 cardGroup.children.forEach((child) => {
 if (child.material) {
@@ -281,8 +278,6 @@ if (spineGroup) {
 const isScrolledPastHero = (smoothScroll > 0.05);
 spineGroup.visible = isScrolledPastHero;
 
-const currentSection = getScrollSection(smoothScroll);
-
 spineGroup.children.forEach((mesh, idx) => {
 if (mesh.material) {
 if (mesh.material.uniforms) {
@@ -292,18 +287,8 @@ if (mesh.material.uniforms.uTime) mesh.material.uniforms.uTime.value = t;
 mesh.material.visible = isScrolledPastHero;
 }
 
-const baseAngle = idx * 0.40;
-const cardIdxMap = [4, 12, 20, 28, 36];
-const targetSegment = cardIdxMap[currentSection] || 4;
-
-const segmentDist = Math.abs(idx - targetSegment);
-let scrollRotationOffset = 0;
-if (segmentDist <= 3 && isScrolledPastHero) {
-const turnFactor = Math.max(0, 1.0 - segmentDist * 0.25);
-scrollRotationOffset = (currentSection % 2 === 0 ? -0.45 : 0.45) * turnFactor;
-}
-
-mesh.rotation.y = baseAngle + scrollRotationOffset;
+// Fixed stationary spine rotation - ZERO bone movement on scroll!
+mesh.rotation.y = idx * 0.40;
 });
 }
 
