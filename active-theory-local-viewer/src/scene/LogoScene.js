@@ -315,8 +315,8 @@ export function createLogoMesh() {
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
 
-    // 1:1 Aspect ratio square plane (1.8 x 1.8 units)
-    const logoGeom = new THREE.PlaneGeometry(1.8, 1.8);
+    // Aspect ratio 1.1976 (1382x1154 tight cropped) -> 2.874 x 2.40 units plane
+    const logoGeom = new THREE.PlaneGeometry(2.874, 2.40);
     const logoMat = new THREE.MeshBasicMaterial({
       map: texture,
       color: new THREE.Color('#ffffff'),
@@ -327,7 +327,7 @@ export function createLogoMesh() {
     });
 
     const logoMesh = new THREE.Mesh(logoGeom, logoMat);
-    logoMesh.position.set(-2.2, 0.0, 0.0);
+    logoMesh.position.set(-2.25, 0.05, 0.0);
     logoGroup.add(logoMesh);
 
     console.log('[LogoScene] Loaded logo_mark.png texture successfully!');
