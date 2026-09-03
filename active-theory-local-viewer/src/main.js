@@ -189,18 +189,18 @@ function animate() {
 requestAnimationFrame(animate);
 const t = clock.getElapsedTime();
 
-smoothScroll += (scrollProgress - smoothScroll) * 0.075;
+  smoothScroll += (scrollProgress - smoothScroll) * 0.038;
 
-const section = getScrollSection(smoothScroll);
-updateActiveMenuItem(section);
+  const section = getScrollSection(smoothScroll);
+  updateActiveMenuItem(section);
 
-if (thumb) {
-thumb.style.top = `${smoothScroll * 60}px`;
-}
+  if (thumb) {
+    thumb.style.top = `${smoothScroll * 60}px`;
+  }
 
   const { cam, target } = lerpPath(smoothScroll);
 
-  camera.position.lerp(cam, 0.12);
+  camera.position.lerp(cam, 0.06);
   camera.lookAt(target);
 
   if (bgMesh) {
@@ -234,7 +234,7 @@ thumb.style.top = `${smoothScroll * 60}px`;
     const camZ = camera.position.z;
     const orbitRadius = 2.4;
     const cardCount = cardsGroup.children.length;
-    const scrollStep = 0.85 / Math.max(1, cardCount - 1);
+    const scrollStep = 0.88 / Math.max(1, cardCount - 1);
 
     cardsGroup.children.forEach((cardGroup) => {
       const data = cardGroup.userData;
@@ -244,14 +244,14 @@ thumb.style.top = `${smoothScroll * 60}px`;
       const cardTargetScroll = 0.10 + i * scrollStep;
       const rel = (smoothScroll - cardTargetScroll) / scrollStep;
 
-      // Top-down cylinder orbit angle theta (0.0 when active)
-      const theta = rel * 0.85;
+      // Smooth cylinder orbit angle theta
+      const theta = rel * 0.70;
 
-      // Exact horizontal center of website when active (X = 0.0) - Rock solid!
+      // Exact horizontal center of website when active (X = 0.0)
       const targetX = orbitRadius * Math.sin(theta);
 
-      // Natural scroll flow: Incoming cards enter from bottom (-Y), exit to top (+Y) - Rock solid!
-      const targetY = camY + (rel * 1.4);
+      // Smooth & relaxed vertical glide flow: Incoming cards enter from bottom (-Y), exit to top (+Y)
+      const targetY = camY + (rel * 1.1);
       const targetZ = (camZ - 2.2) - orbitRadius * (1.0 - Math.cos(theta));
 
       // Tangent outward normal rotation (0.0 when active)
