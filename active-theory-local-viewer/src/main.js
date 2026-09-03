@@ -275,13 +275,13 @@ const t = clock.getElapsedTime();
   }
 
   if (spineGroup) {
-    // Backbone fires up milliseconds AFTER first card renders in the center (smoothScroll > 0.098)
-    const spineThreshold = 0.098;
+    // Backbone fires up when Card 0 is at the exact bottom-left position (smoothScroll > 0.082)
+    const spineThreshold = 0.082;
     const isPastHero = (smoothScroll > spineThreshold);
     spineGroup.visible = isPastHero;
 
     if (isPastHero) {
-      const spineProgress = Math.max(0.0, Math.min(1.0, (smoothScroll - spineThreshold) / 0.06));
+      const spineProgress = Math.max(0.0, Math.min(1.0, (smoothScroll - spineThreshold) / 0.05));
       const easeProgress = 1.0 - Math.pow(1.0 - spineProgress, 2.0);
 
       // Smooth bottom-to-top rising entrance from bottom of viewport (-6.0 units down to 0.0)
