@@ -353,12 +353,38 @@ export function createLogoMesh() {
     });
 
     const thusaMesh = new THREE.Mesh(planeGeom, planeMat);
-    thusaMesh.position.set(0.70, 0.0, 0.0);
+    thusaMesh.position.set(0.70, 0.45, 0.0);
     logoGroup.add(thusaMesh);
 
     console.log('[LogoScene] Loaded THUSA-removebg-preview.png texture successfully!');
   }, undefined, (err) => {
     console.error('[LogoScene] Failed to load THUSA-removebg-preview.png:', err);
+  });
+
+  // Load Consultation Service Subtitle Image Texture (/public/images/subtitle_text.png)
+  textureLoader.load('/images/subtitle_text.png', (texture) => {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+
+    // Aspect ratio 1.776 (666x375) -> 3.5 x 1.97 units plane
+    const subGeom = new THREE.PlaneGeometry(3.6, 2.0);
+    const subMat = new THREE.MeshBasicMaterial({
+      map: texture,
+      color: new THREE.Color('#ffffff'),
+      transparent: true,
+      opacity: 1.0,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+
+    const subMesh = new THREE.Mesh(subGeom, subMat);
+    subMesh.position.set(0.70, -0.55, 0.0);
+    logoGroup.add(subMesh);
+
+    console.log('[LogoScene] Loaded subtitle_text.png texture successfully!');
+  }, undefined, (err) => {
+    console.error('[LogoScene] Failed to load subtitle_text.png:', err);
   });
 
   return {
