@@ -265,10 +265,10 @@ float isLetterA = smoothstep(0.76, 0.79, xNorm) * (1.0 - smoothstep(0.87, 0.90, 
 float aGradient = smoothstep(0.10, 0.90, (xNorm - 0.76) / 0.11 + (yNorm - 0.25) * 0.9);
 aGradient = clamp(aGradient, 0.0, 1.0);
 
-vec3 darkObsidian = vec3(0.0118, 0.0863, 0.2431); // #03163e
-vec3 brightLiquid = getRampColor(mix(0.35, 0.50, aGradient)); // #a805cf -> #c103e5
+vec3 darkObsidian = vec3(0.42, 0.08, 0.65); // Vibrant rich metallic purple #6b14a6!
+vec3 brightLiquid = getRampColor(mix(0.35, 0.55, aGradient)); // Glowing magenta liquid #d900ff!
 
-// All letters are solid high-gloss dark #03163e except letter 'a' top-right curve!
+// All letters are vibrant metallic purple with letter 'a' top-right liquid gradient!
 vec3 baseColor = mix(darkObsidian, brightLiquid, isLetterA * aGradient * 0.98);
 
 // Studio Lighting
@@ -277,24 +277,24 @@ vec3 fillLightDir = normalize(vec3(0.6, -0.3, 0.5));
 float NdotL1 = max(dot(N, keyLightDir), 0.0);
 float NdotL2 = max(dot(N, fillLightDir), 0.0);
 
-float studioLight = NdotL1 * 0.65 + NdotL2 * 0.25 + 0.25;
+float studioLight = NdotL1 * 0.75 + NdotL2 * 0.35 + 0.35;
 vec3 shadedColor = baseColor * studioLight;
 
 // Specular Clearcoat Wet Glint
 vec3 H1 = normalize(keyLightDir + V);
 float specSharp = pow(max(dot(N, H1), 0.0), 160.0);
 float specBroad = pow(max(dot(N, H1), 0.0), 22.0);
-vec3 specular = vec3(1.0) * (specSharp * 1.6 + specBroad * 0.30);
+vec3 specular = vec3(1.0) * (specSharp * 1.8 + specBroad * 0.35);
 
 // Studio Box Reflection
 vec3 R = reflect(-V, N);
 float studioRefl = pow(max(dot(R, normalize(vec3(-0.35, 0.75, 0.55))), 0.0), 10.0);
-specular += vec3(0.95, 0.98, 1.0) * studioRefl * 0.55;
+specular += vec3(0.95, 0.98, 1.0) * studioRefl * 0.65;
 
 // Fresnel Glass Rim
 float fresnel = pow(1.0 - NdotV, 3.2);
-vec3 rimColor = mix(vec3(0.75, 0.82, 0.95), vec3(0.85, 0.10, 0.95), isLetterA * 0.85);
-vec3 glassRim = rimColor * fresnel * 0.85;
+vec3 rimColor = mix(vec3(0.85, 0.60, 0.98), vec3(0.95, 0.20, 0.98), isLetterA * 0.85);
+vec3 glassRim = rimColor * fresnel * 0.95;
 
 vec3 finalColor = shadedColor + specular + glassRim;
 gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0);
@@ -304,72 +304,72 @@ gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0);
 }
 
 export function createLogoMesh() {
-const logoGroup = new THREE.Group();
-const animatedMaterials = [];
+  const logoGroup = new THREE.Group();
+  const animatedMaterials = [];
 
-const loader = new GLTFLoader();
+  const loader = new GLTFLoader();
 
-// Load 3D Swollen Liquid Logo Mark (Pure Copilot3D GLB)
-loader.load('/models/Copilot3D_clean.glb', (gltf) => {
-  const logoMeshGroup = gltf.scene;
-  logoMeshGroup.scale.setScalar(1.2);
-  logoMeshGroup.position.set(-2.0, 0.0, 0.0);
+  // Load 3D Swollen Liquid Logo Mark (Pure Copilot3D GLB)
+  loader.load('/models/Copilot3D_clean.glb', (gltf) => {
+    const logoMeshGroup = gltf.scene;
+    logoMeshGroup.scale.setScalar(1.2);
+    logoMeshGroup.position.set(-2.2, 0.0, 0.0);
 
-  logoMeshGroup.traverse((obj) => {
-    if (obj.isMesh) {
-      obj.geometry.computeVertexNormals();
-      obj.geometry.computeBoundingSphere();
+    logoMeshGroup.traverse((obj) => {
+      if (obj.isMesh) {
+        obj.geometry.computeVertexNormals();
+        obj.geometry.computeBoundingSphere();
 
-      const masterMat = makeMasterLogoMaterial(obj.geometry);
-      obj.material = masterMat;
-      animatedMaterials.push(masterMat);
-    }
-  });
-
-  logoGroup.add(logoMeshGroup);
-}, undefined, (err) => {
-  console.error('[LogoScene] Failed to load Copilot3D_clean.glb:', err);
-});
-
-// Load 3D Text Mesh (Interstellar with user's custom 3D swollen 'a')
-loader.load('/assets/geometry/interstellar_text.glb', (gltf) => {
-  const textScene = gltf.scene;
-
-  // Recenter child meshes so Custom_3D_Letter_A (offset high in gltf) aligns with TextMain
-  textScene.traverse((obj) => {
-    if (obj.isMesh) {
-      obj.geometry.computeBoundingBox();
-      const b = obj.geometry.boundingBox;
-      const centerY = (b.min.y + b.max.y) * 0.5;
-      if (centerY > 1.5) {
-        obj.position.y -= centerY;
+        const masterMat = makeMasterLogoMaterial(obj.geometry);
+        obj.material = masterMat;
+        animatedMaterials.push(masterMat);
       }
-    }
+    });
+
+    logoGroup.add(logoMeshGroup);
+  }, undefined, (err) => {
+    console.error('[LogoScene] Failed to load Copilot3D_clean.glb:', err);
   });
 
-  const bbox = new THREE.Box3().setFromObject(textScene);
-  const center = bbox.getCenter(new THREE.Vector3());
+  // Load 3D Text Mesh (Interstellar with user's custom 3D swollen 'a')
+  loader.load('/models/interstellar_text.glb', (gltf) => {
+    const textScene = gltf.scene;
 
-  // TextMain is 75.7 units wide in local coordinates, scale by 0.045 -> 3.4 units wide
-  const textScale = 0.045;
-  textScene.scale.setScalar(textScale);
-  textScene.position.set(-center.x * textScale + 0.40, -center.y * textScale, -center.z * textScale);
+    // Recenter child meshes so Custom_3D_Letter_A (offset high in gltf) aligns with TextMain
+    textScene.traverse((obj) => {
+      if (obj.isMesh) {
+        obj.geometry.computeBoundingBox();
+        const b = obj.geometry.boundingBox;
+        const centerY = (b.min.y + b.max.y) * 0.5;
+        if (centerY > 1.5) {
+          obj.position.y = -centerY;
+        }
+      }
+    });
 
-  textScene.traverse((obj) => {
-    if (obj.isMesh) {
-      obj.geometry.computeVertexNormals();
+    const bbox = new THREE.Box3().setFromObject(textScene);
+    const center = bbox.getCenter(new THREE.Vector3());
 
-      const textMat = makeMasterTextMaterial(obj.geometry);
-      obj.material = textMat;
-      animatedMaterials.push(textMat);
-    }
+    // Scale and position 3D Interstellar text beside liquid logo mark
+    const textScale = 0.052;
+    textScene.scale.setScalar(textScale);
+    textScene.position.set(-center.x * textScale + 0.60, -center.y * textScale, -center.z * textScale);
+
+    textScene.traverse((obj) => {
+      if (obj.isMesh) {
+        obj.geometry.computeVertexNormals();
+
+        const textMat = makeMasterTextMaterial(obj.geometry);
+        obj.material = textMat;
+        animatedMaterials.push(textMat);
+      }
+    });
+
+    logoGroup.add(textScene);
+    console.log('[LogoScene] Loaded 3D Interstellar text mesh successfully!');
+  }, undefined, (err) => {
+    console.error('[LogoScene] Failed to load interstellar_text.glb:', err);
   });
-
-  logoGroup.add(textScene);
-  console.log('[LogoScene] Loaded interstellar_text.glb successfully');
-}, undefined, (err) => {
-  console.error('[LogoScene] Failed to load interstellar_text.glb:', err);
-});
 
 return {
 group: logoGroup,
