@@ -198,84 +198,79 @@ if (thumb) {
 thumb.style.top = `${smoothScroll * 60}px`;
 }
 
-const { cam, target } = lerpPath(smoothScroll);
-cam.x += mouse.x * 0.18;
-cam.y += mouse.y * 0.08;
+  const { cam, target } = lerpPath(smoothScroll);
 
-camera.position.lerp(cam, 0.12);
-const lookTarget = new THREE.Vector3();
-lookTarget.copy(target);
-lookTarget.x += mouse.x * 0.05;
-camera.lookAt(lookTarget);
+  camera.position.lerp(cam, 0.12);
+  camera.lookAt(target);
 
-if (bgMesh) {
-bgMesh.position.y = camera.position.y;
-}
+  if (bgMesh) {
+    bgMesh.position.y = camera.position.y;
+  }
 
-if (logoGroup && logoObj) {
-logoObj.update(t);
+  if (logoGroup && logoObj) {
+    logoObj.update(t);
 
-const logoT = Math.min(1.0, smoothScroll / 0.20);
+    const logoT = Math.min(1.0, smoothScroll / 0.20);
 
-logoGroup.position.set(
-0.12 + mouse.x * 0.14,
-3.6 + logoT * 6.0 + mouse.y * 0.10,
--0.5
-);
+    logoGroup.position.set(
+      0.12,
+      3.6 + logoT * 6.0,
+      -0.5
+    );
 
-logoGroup.scale.setScalar(0.75 * (1.0 - logoT * 0.45));
+    logoGroup.scale.setScalar(0.75 * (1.0 - logoT * 0.45));
 
-logoGroup.rotation.y = 0.05 + mouse.x * 0.15;
-logoGroup.rotation.x = -0.12 - mouse.y * 0.08;
+    logoGroup.rotation.y = 0.05;
+    logoGroup.rotation.x = -0.12;
 
-logoGroup.visible = (logoT < 0.99);
-}
+    logoGroup.visible = (logoT < 0.99);
+  }
 
-if (cardsGroup) {
-const isScrolledPastHero = (smoothScroll > 0.05);
-cardsGroup.visible = isScrolledPastHero;
+  if (cardsGroup) {
+    const isScrolledPastHero = (smoothScroll > 0.05);
+    cardsGroup.visible = isScrolledPastHero;
 
-const camY = camera.position.y;
-const camZ = camera.position.z;
-const orbitRadius = 2.4;
-const cardCount = cardsGroup.children.length;
-const scrollStep = 0.85 / Math.max(1, cardCount - 1);
+    const camY = camera.position.y;
+    const camZ = camera.position.z;
+    const orbitRadius = 2.4;
+    const cardCount = cardsGroup.children.length;
+    const scrollStep = 0.85 / Math.max(1, cardCount - 1);
 
-cardsGroup.children.forEach((cardGroup) => {
-const data = cardGroup.userData;
-const i = data.section;
+    cardsGroup.children.forEach((cardGroup) => {
+      const data = cardGroup.userData;
+      const i = data.section;
 
-// Target scroll for card i to be active in the exact center of the website
-const cardTargetScroll = 0.10 + i * scrollStep;
-const rel = (smoothScroll - cardTargetScroll) / scrollStep;
+      // Target scroll for card i to be active in the exact center of the website
+      const cardTargetScroll = 0.10 + i * scrollStep;
+      const rel = (smoothScroll - cardTargetScroll) / scrollStep;
 
-// Top-down cylinder orbit angle theta (0.0 when active)
-const theta = rel * 0.85;
+      // Top-down cylinder orbit angle theta (0.0 when active)
+      const theta = rel * 0.85;
 
-// Exact horizontal center of website when active (X = 0.0)
-const targetX = orbitRadius * Math.sin(theta) + mouse.x * 0.08;
+      // Exact horizontal center of website when active (X = 0.0) - Rock solid!
+      const targetX = orbitRadius * Math.sin(theta);
 
-// Natural scroll flow: Incoming cards enter from bottom (-Y), exit to top (+Y)
-const targetY = camY + (rel * 1.4) + mouse.y * 0.08;
-const targetZ = (camZ - 2.2) - orbitRadius * (1.0 - Math.cos(theta));
+      // Natural scroll flow: Incoming cards enter from bottom (-Y), exit to top (+Y) - Rock solid!
+      const targetY = camY + (rel * 1.4);
+      const targetZ = (camZ - 2.2) - orbitRadius * (1.0 - Math.cos(theta));
 
-// Tangent outward normal rotation (0.0 when active)
-const targetRotY = theta;
+      // Tangent outward normal rotation (0.0 when active)
+      const targetRotY = theta;
 
-// Opacity highest when facing front center
-const facingFactor = Math.cos(theta);
-const opacity = Math.max(0.0, Math.min(1.0, (facingFactor - 0.10) / 0.90));
+      // Opacity highest when facing front center
+      const facingFactor = Math.cos(theta);
+      const opacity = Math.max(0.0, Math.min(1.0, (facingFactor - 0.10) / 0.90));
 
-cardGroup.position.set(targetX, targetY, targetZ);
-cardGroup.rotation.y = targetRotY;
+      cardGroup.position.set(targetX, targetY, targetZ);
+      cardGroup.rotation.y = targetRotY;
 
-cardGroup.children.forEach((child) => {
-if (child.material) {
-child.material.opacity = (child.material.map ? 0.98 : 0.82) * opacity;
-}
-});
-});
-}
+      cardGroup.children.forEach((child) => {
+        if (child.material) {
+          child.material.opacity = (child.material.map ? 0.98 : 0.82) * opacity;
+        }
+      });
+    });
+  }
 
 if (spineGroup) {
 const isScrolledPastHero = (smoothScroll > 0.05);
