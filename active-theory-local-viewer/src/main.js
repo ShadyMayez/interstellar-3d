@@ -235,34 +235,43 @@ if (cardsGroup) {
 const isScrolledPastHero = (smoothScroll > 0.05);
 cardsGroup.visible = isScrolledPastHero;
 
-cardsGroup.children.forEach((cardGroup) => {
-const data = cardGroup.userData;
-// Section target scroll: Section 0 at 0.12, Section 1 at 0.30, etc.
-const targetScroll = 0.12 + data.section * 0.18;
-const rel = (smoothScroll - targetScroll) / 0.18;
-
-// 3D Motion Path (Bottom-Right -> Center -> Top-Left)
 const camY = camera.position.y;
 const camZ = camera.position.z;
+const orbitRadius = 2.6;
 
-const targetX = -2.4 * rel + mouse.x * 0.10;
-const targetY = camY - 2.0 * rel + mouse.y * 0.08;
-const targetZ = camZ - 2.4 - 1.8 * (rel * rel);
+cardsGroup.children.forEach((cardGroup) => {
+const data = cardGroup.userData;
+const i = data.section;
 
-cardGroup.position.set(targetX, targetY, targetZ);
+// Target scroll for card i to be at front center facing us
+const cardTargetScroll = 0.12 + i * 0.18;
+const scrollRel = (smoothScroll - cardTargetScroll) / 0.18;
 
-// Rotation Y:
-// rel < 0 (bottom-right): facing right (-0.55 rad)
-// rel = 0 (center): facing us directly (0.0 rad)
-// rel > 0 (top-left): facing left (+0.55 rad)
-const targetRotY = Math.max(-0.58, Math.min(0.58, rel * 0.70));
-cardGroup.rotation.y = targetRotY;
+// Orbital angle around the central Y-axis (backbone column)
+// When scrollRel = 0: theta = 0 (front center facing us)
+// When scrollRel < 0: theta < 0 (orbiting on the left side)
+// When scrollRel > 0: theta > 0 (orbiting to the right side)
+const theta = scrollRel * 0.90;
 
-// Opacity
-const activeOpacity = Math.max(0.0, 1.0 - Math.pow(Math.abs(rel), 1.6));
+const x = orbitRadius * Math.sin(theta) + mouse.x * 0.10;
+const z = (camZ - 2.4) + (orbitRadius * (Math.cos(theta) - 1.0));
+
+// Vertical Y position aligned with section height
+const sectionBaseY = 3.0 - i * 2.0;
+const targetY = sectionBaseY + (camY - 3.6) + mouse.y * 0.08;
+
+cardGroup.position.set(x, targetY, z);
+
+// Natural outward facing rotation along cylinder radius
+cardGroup.rotation.y = theta;
+
+// Opacity highest when facing front center
+const facingUs = Math.cos(theta);
+const opacity = Math.max(0.0, Math.min(1.0, (facingUs - 0.2) / 0.8));
+
 cardGroup.children.forEach((child) => {
 if (child.material) {
-child.material.opacity = (child.material.map ? 0.98 : 0.82) * activeOpacity;
+child.material.opacity = (child.material.map ? 0.98 : 0.82) * opacity;
 }
 });
 });
