@@ -227,7 +227,7 @@ const t = clock.getElapsedTime();
   }
 
   if (cardsGroup) {
-    const isScrolledPastHero = (smoothScroll > 0.08);
+    const isScrolledPastHero = (smoothScroll > 0.060);
     cardsGroup.visible = isScrolledPastHero;
 
     const camY = camera.position.y;
@@ -244,22 +244,24 @@ const t = clock.getElapsedTime();
       const cardTargetScroll = 0.10 + i * scrollStep;
       const rel = (smoothScroll - cardTargetScroll) / scrollStep;
 
-      // Smooth cylinder orbit angle theta (sweet spot spacing)
-      const theta = rel * 0.82;
+      // Smooth cylinder orbit angle theta: far-left transparent state when incoming!
+      const theta = rel < 0 ? rel * 1.5 : rel * 0.82;
 
-      // Exact horizontal center of website when active (X = 0.0)
+      // Horizontal position: glides from far-left to leveled 0.0 in the center!
       const targetX = orbitRadius * Math.sin(theta);
 
-      // Sweet spot vertical spacing (1.6 units) - Cards stay close without overlapping!
+      // Vertical position & depth
       const targetY = camY + (rel * 1.6);
       const targetZ = (camZ - 2.2) - orbitRadius * (1.0 - Math.cos(theta));
 
       // Tangent outward normal rotation (0.0 when active)
       const targetRotY = theta;
 
-      // Opacity highest when facing front center
+      // Opacity: starts very transparent when far-left, levels to 100% in center!
       const facingFactor = Math.cos(theta);
-      const opacity = Math.max(0.0, Math.min(1.0, (facingFactor - 0.10) / 0.90));
+      const centerOpacity = Math.max(0.0, Math.min(1.0, (facingFactor - 0.10) / 0.90));
+      const incomingOpacity = rel < 0 ? Math.max(0.0, Math.min(1.0, (rel + 0.35) / 0.35)) : 1.0;
+      const opacity = centerOpacity * incomingOpacity;
 
       cardGroup.position.set(targetX, targetY, targetZ);
       cardGroup.rotation.y = targetRotY;
@@ -273,16 +275,17 @@ const t = clock.getElapsedTime();
   }
 
   if (spineGroup) {
-    const spineThreshold = 0.08;
+    // Backbone fires up milliseconds AFTER first card renders in the center (smoothScroll > 0.098)
+    const spineThreshold = 0.098;
     const isPastHero = (smoothScroll > spineThreshold);
     spineGroup.visible = isPastHero;
 
     if (isPastHero) {
-      const spineProgress = Math.max(0.0, Math.min(1.0, (smoothScroll - spineThreshold) / 0.05));
+      const spineProgress = Math.max(0.0, Math.min(1.0, (smoothScroll - spineThreshold) / 0.06));
       const easeProgress = 1.0 - Math.pow(1.0 - spineProgress, 2.0);
 
-      // Smooth vertical rise offset synchronized with first card entrance
-      spineGroup.position.y = (1.0 - easeProgress) * -3.0;
+      // Smooth bottom-to-top rising entrance from bottom of viewport (-6.0 units down to 0.0)
+      spineGroup.position.y = (1.0 - easeProgress) * -6.0;
 
       // Smooth fade in opacity
       const spineOpacity = Math.max(0.0, Math.min(1.0, (smoothScroll - spineThreshold) / 0.03));
