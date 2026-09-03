@@ -227,7 +227,7 @@ const t = clock.getElapsedTime();
   }
 
   if (cardsGroup) {
-    const isScrolledPastHero = (smoothScroll > 0.060);
+    const isScrolledPastHero = (smoothScroll > 0.025);
     cardsGroup.visible = isScrolledPastHero;
 
     const camY = camera.position.y;
@@ -240,8 +240,8 @@ const t = clock.getElapsedTime();
       const data = cardGroup.userData;
       const i = data.section;
 
-      // Target scroll for card i to be active in the exact center of the website
-      const cardTargetScroll = 0.10 + i * scrollStep;
+      // Target scroll for card i to be active in the exact center of the website (starts earlier at 0.06)
+      const cardTargetScroll = 0.06 + i * scrollStep;
       const rel = (smoothScroll - cardTargetScroll) / scrollStep;
 
       // Smooth cylinder orbit angle theta: far-left transparent state when incoming!
@@ -275,8 +275,8 @@ const t = clock.getElapsedTime();
   }
 
   if (spineGroup) {
-    // Backbone fires up when Card 0 is at the exact bottom-left position (smoothScroll > 0.082)
-    const spineThreshold = 0.082;
+    // Backbone fires up right alongside first card entrance (smoothScroll > 0.045)
+    const spineThreshold = 0.045;
     const isPastHero = (smoothScroll > spineThreshold);
     spineGroup.visible = isPastHero;
 
