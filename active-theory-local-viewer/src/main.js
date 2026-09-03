@@ -4,7 +4,6 @@ import { loadDracoDecoder, initDraco } from './binViewer.js';
 import { loadSpineMesh } from './scene/SpineScene.js';
 import { createLogoMesh } from './scene/LogoScene.js';
 import { createParticles } from './scene/createParticles.js';
-import { createGlassCards } from './scene/createGlassCards.js';
 import { setupPostprocessing } from './postprocessing.js';
 
 /* ──────────────────────────────────────────────
@@ -169,9 +168,6 @@ scene.add(spineGroup);
 particleGroup = await createParticles(dracoInstance);
 scene.add(particleGroup);
 
-cardsGroup = createGlassCards();
-scene.add(cardsGroup);
-
 postprocessing = setupPostprocessing(renderer, scene, camera);
 
 // Events
@@ -231,27 +227,6 @@ logoGroup.rotation.x = -0.12 - mouse.y * 0.08;
 logoGroup.visible = (logoT < 0.99);
 }
 
-if (cardsGroup) {
-const isScrolledPastHero = (smoothScroll > 0.05);
-cardsGroup.visible = isScrolledPastHero;
-
-cardsGroup.children.forEach((cardGroup) => {
-const d = cardGroup.userData;
-const sectionTargetScroll = d.section * 0.20 + 0.10;
-const scrollDiff = smoothScroll - sectionTargetScroll;
-const cardActiveT = Math.max(0.0, 1.0 - Math.abs(scrollDiff) * 3.5);
-
-cardGroup.position.y = d.baseY + Math.sin(t * 1.2 + d.section) * 0.05;
-cardGroup.position.x = d.baseX + mouse.x * 0.12;
-
-cardGroup.children.forEach((child) => {
-if (child.material) {
-child.material.opacity = (child.material.map ? 0.95 : 0.45) * (0.35 + cardActiveT * 0.65);
-}
-});
-});
-}
-
 if (spineGroup) {
 const isScrolledPastHero = (smoothScroll > 0.05);
 spineGroup.visible = isScrolledPastHero;
@@ -267,15 +242,18 @@ if (mesh.material.uniforms.uTime) mesh.material.uniforms.uTime.value = t;
 mesh.material.visible = isScrolledPastHero;
 }
 
-const segmentSection = Math.min(4, Math.floor((idx / 40) * 5));
-let targetRotationY = idx * 0.35;
+const baseAngle = idx * 0.40;
+const cardIdxMap = [4, 12, 20, 28, 36];
+const targetSegment = cardIdxMap[currentSection] || 4;
 
-if (segmentSection === currentSection && isScrolledPastHero) {
-const turnAngle = (currentSection % 2 === 0) ? -0.45 : 0.45;
-targetRotationY += turnAngle;
+const segmentDist = Math.abs(idx - targetSegment);
+let scrollRotationOffset = 0;
+if (segmentDist <= 3 && isScrolledPastHero) {
+const turnFactor = Math.max(0, 1.0 - segmentDist * 0.25);
+scrollRotationOffset = (currentSection % 2 === 0 ? -0.45 : 0.45) * turnFactor;
 }
 
-mesh.rotation.y += (targetRotationY - mesh.rotation.y) * 0.08;
+mesh.rotation.y = baseAngle + scrollRotationOffset;
 });
 }
 
