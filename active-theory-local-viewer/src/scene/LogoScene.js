@@ -341,8 +341,8 @@ export function createLogoMesh() {
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
 
-    // Aspect ratio 3.007 (866x288) -> 4.5 x 1.5 units plane
-    const planeGeom = new THREE.PlaneGeometry(4.5, 1.5);
+    // Aspect ratio 3.004 (850x283 tight cropped) -> 4.5 x 1.50 units plane
+    const planeGeom = new THREE.PlaneGeometry(4.5, 1.50);
     const planeMat = new THREE.MeshBasicMaterial({
       map: texture,
       color: new THREE.Color('#ffffff'),
@@ -353,7 +353,7 @@ export function createLogoMesh() {
     });
 
     const thusaMesh = new THREE.Mesh(planeGeom, planeMat);
-    thusaMesh.position.set(0.70, 0.45, 0.0);
+    thusaMesh.position.set(0.70, 0.22, 0.0);
     logoGroup.add(thusaMesh);
 
     console.log('[LogoScene] Loaded THUSA-removebg-preview.png texture successfully!');
@@ -367,8 +367,8 @@ export function createLogoMesh() {
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
 
-    // Aspect ratio 1.776 (666x375) -> 3.5 x 1.97 units plane
-    const subGeom = new THREE.PlaneGeometry(3.6, 2.0);
+    // Aspect ratio 11.093 (599x54 tight cropped) -> 3.6 x 0.325 units plane
+    const subGeom = new THREE.PlaneGeometry(3.6, 0.325);
     const subMat = new THREE.MeshBasicMaterial({
       map: texture,
       color: new THREE.Color('#ffffff'),
@@ -379,7 +379,7 @@ export function createLogoMesh() {
     });
 
     const subMesh = new THREE.Mesh(subGeom, subMat);
-    subMesh.position.set(0.70, -0.55, 0.0);
+    subMesh.position.set(0.70, -0.42, 0.0);
     logoGroup.add(subMesh);
 
     console.log('[LogoScene] Loaded subtitle_text.png texture successfully!');
