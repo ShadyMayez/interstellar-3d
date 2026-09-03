@@ -27,17 +27,17 @@ function createCardCanvasTexture(data) {
   ctx.roundRect(0, 0, 1024, 512, 48);
   ctx.clip();
 
-  // Glass Tint Background
+  // Glass Tint Background matching physical glass material color (no black edges!)
   const grad = ctx.createLinearGradient(0, 0, 1024, 512);
-  grad.addColorStop(0, 'rgba(16, 6, 36, 0.88)');
-  grad.addColorStop(0.5, 'rgba(68, 10, 115, 0.82)');
-  grad.addColorStop(1, 'rgba(125, 4, 160, 0.88)');
+  grad.addColorStop(0, 'rgba(65, 10, 110, 0.92)');
+  grad.addColorStop(0.5, 'rgba(95, 8, 145, 0.88)');
+  grad.addColorStop(1, 'rgba(135, 5, 175, 0.92)');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 1024, 512);
 
   // Top specular reflection highlight
   const lightGrad = ctx.createLinearGradient(0, 0, 0, 140);
-  lightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.16)');
+  lightGrad.addColorStop(0, 'rgba(255, 255, 255, 0.18)');
   lightGrad.addColorStop(1, 'rgba(255, 255, 255, 0.0)');
   ctx.fillStyle = lightGrad;
   ctx.fillRect(0, 0, 1024, 140);
@@ -171,25 +171,25 @@ export function createGlassCards() {
     const cardGroup = new THREE.Group();
     cardGroup.name = `Card_${data.section}`;
 
-    // Physical Glass Material for 3D Thick Block
+    // Physical Glass Material for 3D Thick Block (Matching vibrant purple/magenta color!)
     const glassMat = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#1a0836'),
-      metalness: 0.12,
-      roughness: 0.08,
-      transmission: 0.85,
-      ior: 1.52,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.05,
+      color: new THREE.Color('#5a0785'),
+      metalness: 0.05,
+      roughness: 0.10,
+      transmission: 0.70,
+      ior: 1.45,
+      clearcoat: 0.8,
+      clearcoatRoughness: 0.1,
       transparent: true,
-      opacity: 0.88,
+      opacity: 0.92,
       side: THREE.DoubleSide,
       depthWrite: false
     });
     const glassMesh = new THREE.Mesh(glassGeom, glassMat);
     cardGroup.add(glassMesh);
 
-    // Front Text Texture Plane (1.76 x 0.96 units)
-    const textGeom = new THREE.PlaneGeometry(1.76, 0.96);
+    // Front Text Texture Plane (1.84 x 1.04 units to cover front face seamlessly!)
+    const textGeom = new THREE.PlaneGeometry(1.84, 1.04);
     const textTexture = createCardCanvasTexture(data);
     const textMat = new THREE.MeshBasicMaterial({
       map: textTexture,
