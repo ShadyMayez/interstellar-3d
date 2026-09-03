@@ -91,6 +91,34 @@ export const CARD_SECTIONS_DATA = [
     title: 'GAMES',
     description: 'High-performance 3D browser gaming',
     description2: 'built with custom engine.'
+  },
+  {
+    section: 5,
+    indexTag: '06 // SPATIAL',
+    title: 'VISION PRO',
+    description: 'Spatial computing, volumetric UI',
+    description2: '& visionOS native 3D web experiences.'
+  },
+  {
+    section: 6,
+    indexTag: '07 // ARTIFICIAL',
+    title: 'NEURAL LABS',
+    description: 'Generative 3D GLSL shaders, AI models',
+    description2: '& real-time neural graphics pipelines.'
+  },
+  {
+    section: 7,
+    indexTag: '08 // IMMERSIVE',
+    title: 'AUDIO VISUAL',
+    description: 'Realtime audio-reactive 3D scenes',
+    description2: '& spatial soundscapes.'
+  },
+  {
+    section: 8,
+    indexTag: '09 // ENTERPRISE',
+    title: '3D ENGINE',
+    description: 'Custom WebGL frameworks, tools',
+    description2: '& high-speed asset pipelines.'
   }
 ];
 

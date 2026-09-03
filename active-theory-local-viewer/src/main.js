@@ -235,25 +235,27 @@ if (cardsGroup) {
 const isScrolledPastHero = (smoothScroll > 0.05);
 cardsGroup.visible = isScrolledPastHero;
 
+const camY = camera.position.y;
 const camZ = camera.position.z;
 const orbitRadius = 2.4;
+const cardCount = cardsGroup.children.length;
+const scrollStep = 0.85 / Math.max(1, cardCount - 1);
 
 cardsGroup.children.forEach((cardGroup) => {
 const data = cardGroup.userData;
 const i = data.section;
 
-// Target scroll for card i to be active in front center facing us
-const cardTargetScroll = 0.12 + i * 0.18;
-const rel = (smoothScroll - cardTargetScroll) / 0.18;
+// Target scroll for card i to be active right in the middle of the screen facing us
+const cardTargetScroll = 0.10 + i * scrollStep;
+const rel = (smoothScroll - cardTargetScroll) / scrollStep;
 
 // Top-down cylinder orbit angle theta
 const theta = rel * 0.85;
 
 const targetX = orbitRadius * Math.sin(theta) + mouse.x * 0.10;
 
-// Vertical placement: Cards stacked under each other closely along section heights
-const sectionBaseY = 3.2 - i * 1.15;
-const targetY = sectionBaseY + mouse.y * 0.08;
+// Vertical placement: ALWAYS centered in the middle of the screen (camY) when active
+const targetY = camY + (rel * -0.5) + mouse.y * 0.08;
 const targetZ = (camZ - 2.2) - orbitRadius * (1.0 - Math.cos(theta));
 
 // Tangent outward normal rotation
