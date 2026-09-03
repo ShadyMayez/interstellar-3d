@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { loadBinaryBuffer } from '../binViewer.js';
 import { createIridescentMaterial } from './materials/iridescentMaterial.js';
-import { CARD_DATA_LIST, createSingleGlassCard } from './createGlassCards.js';
 
 export async function loadSpineMesh(dracoInstance) {
   const group = new THREE.Group();
@@ -92,16 +91,6 @@ export async function loadSpineMesh(dracoInstance) {
           const yPos = 4.0 - i * 0.42; // Spans vertically from +4.0 down to -12.4
           segmentMesh.position.set(0.6, yPos, -0.6);
           segmentMesh.rotation.y = i * 0.40;
-
-          // Attach section card directly onto bone segment if mapped
-          const cardData = CARD_DATA_LIST.find((c) => c.segmentIdx === i);
-          if (cardData) {
-            const cardMesh = createSingleGlassCard(cardData);
-            // Scale inversely (1 / 2.3) so card stays sleek compact size
-            cardMesh.scale.set(0.435, 0.435, 0.435);
-            segmentMesh.add(cardMesh);
-          }
-
           group.add(segmentMesh);
         }
 

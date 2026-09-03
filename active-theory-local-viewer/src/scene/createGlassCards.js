@@ -19,45 +19,48 @@ function createCardCanvasTexture(data) {
   canvas.height = 512;
   const ctx = canvas.getContext('2d');
 
-  // Background Glass Tint gradient
+  // Glass Tint Background
   const grad = ctx.createLinearGradient(0, 0, 1024, 512);
-  grad.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
-  grad.addColorStop(0.5, 'rgba(155, 7, 195, 0.18)');
-  grad.addColorStop(1, 'rgba(35, 12, 80, 0.28)');
+  grad.addColorStop(0, 'rgba(15, 6, 35, 0.75)');
+  grad.addColorStop(0.5, 'rgba(65, 10, 110, 0.65)');
+  grad.addColorStop(1, 'rgba(120, 5, 160, 0.75)');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, 1024, 512);
 
-  // Border outline
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.50)';
+  // Border outline & glowing glass rim
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.65)';
   ctx.lineWidth = 8;
-  ctx.strokeRect(12, 12, 1000, 488);
+  ctx.strokeRect(14, 14, 996, 484);
 
   // Corner Accents
-  ctx.fillStyle = '#c103e5';
-  ctx.fillRect(12, 12, 40, 8);
-  ctx.fillRect(12, 12, 8, 40);
-  ctx.fillRect(972, 464, 40, 8);
-  ctx.fillRect(1004, 432, 8, 40);
+  ctx.fillStyle = '#d900ff';
+  ctx.fillRect(14, 14, 48, 8);
+  ctx.fillRect(14, 14, 8, 48);
+  ctx.fillRect(962, 462, 48, 8);
+  ctx.fillRect(1002, 422, 8, 48);
 
   // Section Index Tag
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.80)';
   ctx.font = '700 32px "NB Architekt Std", monospace, sans-serif';
-  ctx.fillText(data.indexTag, 48, 80);
+  ctx.fillText(data.indexTag, 52, 82);
 
   // Title
   ctx.fillStyle = '#ffffff';
   ctx.font = '900 68px "NB Architekt Std", system-ui, sans-serif';
-  ctx.fillText(data.title, 48, 175);
+  ctx.fillText(data.title, 52, 175);
 
   // Subtitle / Description
   ctx.fillStyle = 'rgba(240, 240, 255, 0.90)';
   ctx.font = '400 30px "NB Architekt Std", monospace, sans-serif';
-  ctx.fillText(data.description, 48, 250);
+  ctx.fillText(data.description, 52, 250);
+  if (data.description2) {
+    ctx.fillText(data.description2, 52, 292);
+  }
 
   // Footer Link CTA
-  ctx.fillStyle = '#c103e5';
+  ctx.fillStyle = '#00e5ff';
   ctx.font = '700 32px "NB Architekt Std", monospace, sans-serif';
-  ctx.fillText('EXPLORE ->', 48, 430);
+  ctx.fillText('EXPLORE SECTION ->', 52, 435);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.minFilter = THREE.LinearFilter;
@@ -66,96 +69,85 @@ function createCardCanvasTexture(data) {
   return texture;
 }
 
-export const CARD_DATA_LIST = [
+export const CARD_SECTIONS_DATA = [
   {
     section: 0,
-    segmentIdx: 4,
     indexTag: '01 // PORTFOLIO',
     title: 'WEBSITES',
-    description: 'Immersive 3D web applications.',
-    offsetX: 0.55,
-    offsetZ: 0.20,
-    rotationY: -0.35
+    description: 'Award-winning 3D web experiences',
+    description2: '& dynamic WebGL applications.'
   },
   {
     section: 1,
-    segmentIdx: 12,
     indexTag: '02 // EXPERIENCES',
     title: 'INSTALLATIONS',
-    description: 'Spatial audio & digital art.',
-    offsetX: -0.55,
-    offsetZ: 0.20,
-    rotationY: 0.35
+    description: 'Interactive physical spaces, digital art',
+    description2: '& spatial projection mapping.'
   },
   {
     section: 2,
-    segmentIdx: 20,
     indexTag: '03 // FUTURE TECH',
     title: 'XR / VR / AI',
-    description: 'WebXR & Vision Pro worlds.',
-    offsetX: 0.55,
-    offsetZ: 0.20,
-    rotationY: -0.35
+    description: 'Realtime WebXR, Apple Vision Pro',
+    description2: '& AI spatial environments.'
   },
   {
     section: 3,
-    segmentIdx: 28,
     indexTag: '04 // CONNECTED',
     title: 'MULTIPLAYER',
-    description: 'Realtime 3D multiplayer events.',
-    offsetX: -0.55,
-    offsetZ: 0.20,
-    rotationY: 0.35
+    description: 'Scalable web-based multiplayer events',
+    description2: 'for thousands of concurrent users.'
   },
   {
     section: 4,
-    segmentIdx: 36,
     indexTag: '05 // GAMING',
     title: 'GAMES',
-    description: 'High-performance WebGL games.',
-    offsetX: 0.55,
-    offsetZ: 0.20,
-    rotationY: -0.35
+    description: 'High-performance 3D browser gaming',
+    description2: 'built with custom engine.'
   }
 ];
 
-export function createSingleGlassCard(data) {
-  const cardGroup = new THREE.Group();
-  cardGroup.name = `Card_${data.section}`;
+export function createGlassCards() {
+  const group = new THREE.Group();
+  group.name = 'CardsGroup';
 
-  // Compact Curvy Glass Backing (Width 1.5, Height 0.8)
-  const glassGeom = createCurvyPlaneGeometry(1.5, 0.8, 16, 16, 0.20);
-  const glassMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color('#ffffff'),
-    metalness: 0.1,
-    roughness: 0.12,
-    transmission: 0.88,
-    ior: 1.45,
-    transparent: true,
-    opacity: 0.55,
-    side: THREE.DoubleSide,
-    depthWrite: false
+  CARD_SECTIONS_DATA.forEach((data) => {
+    const cardGroup = new THREE.Group();
+    cardGroup.name = `Card_${data.section}`;
+
+    // Curvy Glass Backing (2.6 x 1.4 units)
+    const glassGeom = createCurvyPlaneGeometry(2.6, 1.4, 24, 24, 0.25);
+    const glassMat = new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color('#1a0836'),
+      metalness: 0.15,
+      roughness: 0.10,
+      transmission: 0.80,
+      ior: 1.45,
+      transparent: true,
+      opacity: 0.85,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const glassMesh = new THREE.Mesh(glassGeom, glassMat);
+    cardGroup.add(glassMesh);
+
+    // Front Text Texture Plane
+    const textGeom = createCurvyPlaneGeometry(2.58, 1.38, 24, 24, 0.25);
+    const textTexture = createCardCanvasTexture(data);
+    const textMat = new THREE.MeshBasicMaterial({
+      map: textTexture,
+      transparent: true,
+      opacity: 0.98,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+    const textMesh = new THREE.Mesh(textGeom, textMat);
+    textMesh.position.z = 0.03;
+    cardGroup.add(textMesh);
+
+    cardGroup.userData = data;
+    group.add(cardGroup);
   });
-  const glassMesh = new THREE.Mesh(glassGeom, glassMat);
-  cardGroup.add(glassMesh);
 
-  // Front Text Texture Plane
-  const textGeom = createCurvyPlaneGeometry(1.48, 0.78, 16, 16, 0.20);
-  const textTexture = createCardCanvasTexture(data);
-  const textMat = new THREE.MeshBasicMaterial({
-    map: textTexture,
-    transparent: true,
-    opacity: 0.95,
-    side: THREE.DoubleSide,
-    depthWrite: false
-  });
-  const textMesh = new THREE.Mesh(textGeom, textMat);
-  textMesh.position.z = 0.02;
-  cardGroup.add(textMesh);
-
-  cardGroup.position.set(data.offsetX, 0.0, data.offsetZ);
-  cardGroup.rotation.y = data.rotationY;
-  cardGroup.userData = data;
-
-  return cardGroup;
+  return group;
 }

@@ -4,6 +4,7 @@ import { loadDracoDecoder, initDraco } from './binViewer.js';
 import { loadSpineMesh } from './scene/SpineScene.js';
 import { createLogoMesh } from './scene/LogoScene.js';
 import { createParticles } from './scene/createParticles.js';
+import { createGlassCards } from './scene/createGlassCards.js';
 import { setupPostprocessing } from './postprocessing.js';
 
 /* ──────────────────────────────────────────────
@@ -168,6 +169,9 @@ scene.add(spineGroup);
 particleGroup = await createParticles(dracoInstance);
 scene.add(particleGroup);
 
+cardsGroup = createGlassCards();
+scene.add(cardsGroup);
+
 postprocessing = setupPostprocessing(renderer, scene, camera);
 
 // Events
@@ -225,6 +229,43 @@ logoGroup.rotation.y = 0.05 + mouse.x * 0.15;
 logoGroup.rotation.x = -0.12 - mouse.y * 0.08;
 
 logoGroup.visible = (logoT < 0.99);
+}
+
+if (cardsGroup) {
+const isScrolledPastHero = (smoothScroll > 0.05);
+cardsGroup.visible = isScrolledPastHero;
+
+cardsGroup.children.forEach((cardGroup) => {
+const data = cardGroup.userData;
+// Section target scroll: Section 0 at 0.12, Section 1 at 0.30, etc.
+const targetScroll = 0.12 + data.section * 0.18;
+const rel = (smoothScroll - targetScroll) / 0.18;
+
+// 3D Motion Path (Bottom-Right -> Center -> Top-Left)
+const camY = camera.position.y;
+const camZ = camera.position.z;
+
+const targetX = -2.4 * rel + mouse.x * 0.10;
+const targetY = camY - 2.0 * rel + mouse.y * 0.08;
+const targetZ = camZ - 2.4 - 1.8 * (rel * rel);
+
+cardGroup.position.set(targetX, targetY, targetZ);
+
+// Rotation Y:
+// rel < 0 (bottom-right): facing right (-0.55 rad)
+// rel = 0 (center): facing us directly (0.0 rad)
+// rel > 0 (top-left): facing left (+0.55 rad)
+const targetRotY = Math.max(-0.58, Math.min(0.58, rel * 0.70));
+cardGroup.rotation.y = targetRotY;
+
+// Opacity
+const activeOpacity = Math.max(0.0, 1.0 - Math.pow(Math.abs(rel), 1.6));
+cardGroup.children.forEach((child) => {
+if (child.material) {
+child.material.opacity = (child.material.map ? 0.98 : 0.82) * activeOpacity;
+}
+});
+});
 }
 
 if (spineGroup) {
